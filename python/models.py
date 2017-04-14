@@ -266,12 +266,21 @@ class CCPM:
 class PNN1:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None):
+        """
+        # Arguments:
+            layer_size: [num_fields, factor_layer, l_p size]
+            layer_acts: ["tanh", "none"]
+            layer_keep: [1, 1]
+            layer_l2: [0, 0]
+            kernel_l2: 0
+        """
         init_vars = []
         num_inputs = len(layer_sizes[0])
         factor_order = layer_sizes[1]
         for i in range(num_inputs):
             layer_input = layer_sizes[0][i]
             layer_output = factor_order
+            # w0 store the embeddings for all features.
             init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
             init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
         init_vars.append(('w1', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
@@ -291,6 +300,7 @@ class PNN1:
             self.vars = utils.init_var_map(init_vars, init_path)
             w0 = [self.vars['w0_%d' % i] for i in range(num_inputs)]
             b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
+            # Multiply SparseTensor X[i] by dense matrix w0[i]
             xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs)]
             x = tf.concat([xw[i] + b0[i] for i in range(num_inputs)], 1)
             l = tf.nn.dropout(
@@ -300,6 +310,7 @@ class PNN1:
             w1 = self.vars['w1']
             k1 = self.vars['k1']
             b1 = self.vars['b1']
+            # This is where W_p \cdot p happens.
             p = tf.reduce_sum(
                 tf.reshape(
                     tf.matmul(
