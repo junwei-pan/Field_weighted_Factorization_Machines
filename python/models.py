@@ -311,6 +311,7 @@ class PNN1:
             k1 = self.vars['k1']
             b1 = self.vars['b1']
             # This is where W_p \cdot p happens.
+            # k1 is \theta, which is the weight for each field(feature) vector
             p = tf.reduce_sum(
                 tf.reshape(
                     tf.matmul(
