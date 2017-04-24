@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import roc_auc_score
 
 import utils
-from models import LR, FM, PNN1, PNN2, FNN, CCPM
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM
 
 train_file = '/Users/jwpan/Github/make-ipinyou-data/2997/train.yx.txt'
 test_file = '/Users/jwpan/Github/make-ipinyou-data/2997/test.yx.txt'
@@ -55,7 +55,7 @@ def train(model):
                 break
 
 
-algo = 'pnn1'
+algo = 'pnn1_fixed'
 
 if algo == 'lr':
     lr_params = {
@@ -114,6 +114,19 @@ elif algo == 'pnn1':
     }
 
     model = PNN1(**pnn1_params)
+elif algo == 'pnn1_fixed':
+    pnn1_fixed_params = {
+        'layer_sizes': [field_sizes, 10, 1, 1],
+        'layer_acts': ['tanh', 'none', 'tanh'],
+        'layer_keeps': [1, 1, 1],
+        'opt_algo': 'gd',
+        'learning_rate': 0.1,
+        'layer_l2': [0, 0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    }
+
+    model = PNN1_Fixed(**pnn1_fixed_params)
 elif algo == 'pnn2':
     pnn2_params = {
         'layer_sizes': [field_sizes, 10, 1],
@@ -128,7 +141,7 @@ elif algo == 'pnn2':
 
     model = PNN2(**pnn2_params)
 
-if algo in {'fnn', 'ccpm', 'pnn1', 'pnn2'}:
+if algo in {'fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2'}:
     train_data = utils.split_data(train_data)
     test_data = utils.split_data(test_data)
 
