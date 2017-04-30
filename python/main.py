@@ -1,12 +1,16 @@
 import numpy as np
 from sklearn.metrics import roc_auc_score
+import time 
 
 import utils
-from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat
 
-train_file = '/Users/jwpan/Github/make-ipinyou-data/2997/train.yx.txt'
-test_file = '/Users/jwpan/Github/make-ipinyou-data/2997/test.yx.txt'
+train_file = '../data_cretio/train.txt.100000.yx.0.7'
+test_file = '../data_cretio/train.txt.100000.yx.0.3'
 # fm_model_file = '../data/fm.model.txt'
+print "train_file: ", train_file
+print "test_file: ", test_file
+
 
 input_dim = utils.INPUT_DIM
 
@@ -29,6 +33,8 @@ field_offsets = utils.FIELD_OFFSETS
 
 def train(model):
     history_score = []
+    start_time = time.time()
+    print 'epochs\tloss\ttrain-auc\teval-auc'
     for i in range(num_round):
         fetches = [model.optimizer, model.loss]
         if batch_size > 0:
@@ -45,7 +51,7 @@ def train(model):
         test_preds = model.run(model.y_prob, utils.slice(test_data)[0])
         train_score = roc_auc_score(train_data[1], train_preds)
         test_score = roc_auc_score(test_data[1], test_preds)
-        print '[%d]\tloss:%f\ttrain-auc: %f\teval-auc: %f' % (i, np.mean(ls), train_score, test_score)
+        print '%d\t%f\t%f\t%f\t%f' % (i, np.mean(ls), train_score, test_score, time.time() - start_time)
         history_score.append(test_score)
         if i > min_round and i > early_stop_round:
             if np.argmax(history_score) == i - early_stop_round and history_score[-1] - history_score[
@@ -55,7 +61,8 @@ def train(model):
                 break
 
 
-algo = 'pnn1_fixed'
+algo = 'pnn1'
+print "algo", algo
 
 if algo == 'lr':
     lr_params = {
@@ -114,14 +121,40 @@ elif algo == 'pnn1':
     }
 
     model = PNN1(**pnn1_params)
-elif algo == 'pnn1_fixed':
-    pnn1_fixed_params = {
-        'layer_sizes': [field_sizes, 10, 1, 1],
-        'layer_acts': ['tanh', 'none', 'tanh'],
-        'layer_keeps': [1, 1, 1],
+elif algo == 'fast_ctr':
+    fast_ctr_params = {
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
         'opt_algo': 'gd',
         'learning_rate': 0.1,
-        'layer_l2': [0, 0, 0],
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    }
+
+    model = Fast_CTR(**fast_ctr_params)
+elif algo == 'fast_ctr_concat':
+    fast_ctr_concat_params = {
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'gd',
+        'learning_rate': 0.1,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    }
+
+    model = Fast_CTR_Concat(**fast_ctr_concat_params)
+elif algo == 'pnn1_fixed':
+    pnn1_fixed_params = {
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'gd',
+        'learning_rate': 0.1,
+        'layer_l2': [0, 0.1],
         'kernel_l2': 0,
         'random_seed': 0
     }
@@ -141,7 +174,7 @@ elif algo == 'pnn2':
 
     model = PNN2(**pnn2_params)
 
-if algo in {'fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2'}:
+if algo in {'fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2', 'fast_ctr', 'fast_ctr_concat'}:
     train_data = utils.split_data(train_data)
     test_data = utils.split_data(test_data)
 
