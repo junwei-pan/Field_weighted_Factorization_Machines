@@ -7,7 +7,7 @@ from scipy.sparse import coo_matrix
 DTYPE = tf.float64
 
 FIELD_SIZES = [0] * 26
-with open('../data_cretio/featindex.txt.100000') as fin:
+with open('../data_cretio/featindex.txt') as fin:
     for line in fin:
         line = line.strip().split(':')
         if len(line) > 1:

@@ -9,9 +9,13 @@ d_field_fea = {}
 d_fea_index = {}
 path_train = 'train.txt'
 path_fea_index = 'featindex.txt'
+batch = 100000
+total = 45840617
 
 def build_field_feature(path, mode):
     for i, line in enumerate(open(path)):
+        if i % batch == batch - 1:
+            print i * 1.0 / total
         lst = line.strip('\n').split('\t')
         for idx_field in range(num_field):
             if mode == 'train':
@@ -35,6 +39,8 @@ def create_fea_index(path):
 def create_yx(path, mode):
     file = open(path + '.yx', 'w')
     for i, line in enumerate(open(path)):
+        if i % batch == batch - 1:
+            print i * 1.0 / total
         res = []
         lst = line.strip('\n').split('\t')
         if mode == 'train':
@@ -52,10 +58,13 @@ def create_yx(path, mode):
         file.write(' '.join(res) + '\n')
     file.close()
 
+print 'build field feature'
 build_field_feature(path_train, 'train')
 #build_field_feature(path_test, 'test')
 
+print 'create fea index'
 create_fea_index(path_fea_index)
 
+print 'create yx'
 create_yx(path_train, 'train')
 #create_yx(path_test, 'test')

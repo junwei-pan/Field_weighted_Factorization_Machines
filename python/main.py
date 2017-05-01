@@ -5,8 +5,8 @@ import time
 import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat
 
-train_file = '../data_cretio/train.txt.100000.yx.0.7'
-test_file = '../data_cretio/train.txt.100000.yx.0.3'
+train_file = '../data_cretio/train.txt.yx.0.7'
+test_file = '../data_cretio/train.txt.yx.0.3'
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
@@ -34,7 +34,7 @@ field_offsets = utils.FIELD_OFFSETS
 def train(model):
     history_score = []
     start_time = time.time()
-    print 'epochs\tloss\ttrain-auc\teval-auc'
+    print 'epochs\tloss\ttrain-auc\teval-auc\ttime'
     for i in range(num_round):
         fetches = [model.optimizer, model.loss]
         if batch_size > 0:
