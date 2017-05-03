@@ -323,13 +323,11 @@ class PNN1:
                         k1),
                     [-1, factor_order, layer_sizes[2]]),
                 1)
-            print("l.shape", l.shape)
             l = tf.nn.dropout(
                 utils.activate(
                     tf.matmul(l, w1) + b1 + p,
                     layer_acts[1]),
                 layer_keeps[1])
-            print("after l.shape", l.shape)
 
             for i in range(2, len(layer_sizes) - 1):
                 wi = self.vars['w%d' % i]
@@ -436,7 +434,6 @@ class Fast_CTR:
                     tf.matmul(l, w1) + b1,
                     layer_acts[1]),
                 layer_keeps[1])
-            print("after l.shape", l.shape)
 
             self.y_prob = tf.sigmoid(l)
 
@@ -533,7 +530,6 @@ class Fast_CTR_Concat:
                     tf.matmul(l, w1) + b1,
                     layer_acts[1]),
                 layer_keeps[1])
-            print("after l.shape", l.shape)
 
             self.y_prob = tf.sigmoid(l)
 

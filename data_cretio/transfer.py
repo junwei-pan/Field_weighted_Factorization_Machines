@@ -7,8 +7,8 @@ offset_test = 13
 
 d_field_fea = {}
 d_fea_index = {}
-path_train = 'train.txt'
-path_fea_index = 'featindex.txt'
+path_train = 'train.txt.100000'
+path_fea_index = 'featindex.txt.100000'
 batch = 100000
 total = 45840617
 

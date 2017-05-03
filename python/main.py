@@ -1,16 +1,16 @@
 import numpy as np
 from sklearn.metrics import roc_auc_score
+from scipy.sparse import coo_matrix
 import time 
 
 import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat
 
-train_file = '../data_cretio/train.txt.yx.0.7'
-test_file = '../data_cretio/train.txt.yx.0.3'
+train_file = '../data_cretio/train.txt.2000000.yx.0.7'
+test_file = '../data_cretio/train.txt.2000000.yx.0.3'
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
-
 
 input_dim = utils.INPUT_DIM
 
@@ -25,7 +25,7 @@ num_feas = len(utils.FIELD_SIZES)
 min_round = 1
 num_round = 1000
 early_stop_round = 50
-batch_size = 256
+batch_size = 256 * 64
 
 field_sizes = utils.FIELD_SIZES
 field_offsets = utils.FIELD_OFFSETS
@@ -47,8 +47,21 @@ def train(model):
             X_i, y_i = utils.slice(train_data)
             _, l = model.run(fetches, X_i, y_i)
             ls = [l]
-        train_preds = model.run(model.y_prob, utils.slice(train_data)[0])
-        test_preds = model.run(model.y_prob, utils.slice(test_data)[0])
+        lst_train_pred = []
+        lst_test_pred = []
+        if batch_size > 0:
+            for j in range(train_size / batch_size + 1):
+                X_i, y_i = utils.slice(train_data, j * batch_size, batch_size)
+                #X_i = utils.libsvm_2_coo(X_i, (len(X_i), input_dim)).tocsr()
+                _train_preds = model.run(model.y_prob, X_i)
+                lst_train_pred.append(_train_preds)
+            for j in range(test_size / batch_size + 1):
+                X_i, y_i = utils.slice(test_data, j * batch_size, batch_size)
+                #X_i = utils.libsvm_2_coo(X_i, (len(X_i), input_dim)).tocsr()
+                _test_preds = model.run(model.y_prob, X_i)
+                lst_test_pred.append(_test_preds)
+        train_preds = np.concatenate(lst_train_pred)
+        test_preds = np.concatenate(lst_test_pred)
         train_score = roc_auc_score(train_data[1], train_preds)
         test_score = roc_auc_score(test_data[1], test_preds)
         print '%d\t%f\t%f\t%f\t%f' % (i, np.mean(ls), train_score, test_score, time.time() - start_time)
