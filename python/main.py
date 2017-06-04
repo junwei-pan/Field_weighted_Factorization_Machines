@@ -4,14 +4,15 @@ from scipy.sparse import coo_matrix
 import time 
 import sys
 import tensorflow as tf
+from time import gmtime, strftime
 
 import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat
 
-train_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.7'
-test_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.3'
-#train_file = '../data_cretio/train.txt.100000.yx.0.7.with_minus'
-#test_file = '../data_cretio/train.txt.100000.yx.0.3'
+#train_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.7'
+#test_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.3'
+train_file = '../data_cretio/train.txt.100000.yx.0.7'
+test_file = '../data_cretio/train.txt.100000.yx.0.3'
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
@@ -29,12 +30,11 @@ num_feas = len(utils.FIELD_SIZES)
 
 min_round = 1
 num_round = 1000
-early_stop_round = 50
+early_stop_round = 20
 batch_size = 2000
 
 field_sizes = utils.FIELD_SIZES
 field_offsets = utils.FIELD_OFFSETS
-
 
 def train(model):
     history_score = []
@@ -70,7 +70,7 @@ def train(model):
         test_preds = np.concatenate(lst_test_pred)
         train_score = roc_auc_score(train_data[1], train_preds)
         test_score = roc_auc_score(test_data[1], test_preds)
-        print '%d\t%f\t%f\t%f\t%f' % (i, np.mean(ls), train_score, test_score, time.time() - start_time)
+        print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
         sys.stdout.flush()
         history_score.append(test_score)
         if i > min_round and i > early_stop_round:
@@ -81,132 +81,89 @@ def train(model):
                 sys.stdout.flush()
                 break
 
+train_data = utils.split_data(train_data)
+test_data = utils.split_data(test_data)
 
-algo = 'pnn2'
-print "algo", algo
-sys.stdout.flush()
-
-if algo == 'lr':
-    lr_params = {
+d_name_model = {}
+d_name_model['lr'] = LR(**{
         'input_dim': input_dim,
-        'opt_algo': 'gd',
-        'learning_rate': 0.01,
+        'opt_algo': 'adam',
+        'learning_rate': 0.0001,
         'l2_weight': 0,
         'random_seed': 0
-    }
+    })
 
-    model = LR(**lr_params)
-elif algo == 'fm':
-    fm_params = {
+d_name_model['fm'] = FM(**{
         'input_dim': input_dim,
         'factor_order': 10,
-        'opt_algo': 'gd',
-        'learning_rate': 0.1,
+        'opt_algo': 'adam',
+        'learning_rate': 0.0001,
         'l2_w': 0,
         'l2_v': 0,
-    }
-
-    model = FM(**fm_params)
-elif algo == 'fnn':
-    fnn_params = {
-        'layer_sizes': [field_sizes, 1, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'gd',
-        'learning_rate': 0.1,
-        'layer_l2': [0, 0],
-        'random_seed': 0
-    }
-
-    model = FNN(**fnn_params)
-elif algo == 'ccpm':
-    ccpm_params = {
-        'layer_sizes': [field_sizes, 10, 5, 3],
-        'layer_acts': ['tanh', 'tanh', 'none'],
-        'layer_keeps': [1, 1, 1],
-        'opt_algo': 'gd',
-        'learning_rate': 0.1,
-        'random_seed': 0
-    }
-
-    model = CCPM(**ccpm_params)
-elif algo == 'pnn1':
-    pnn1_params = {
-        'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'gd',
-        'learning_rate': 0.1,
-        'layer_l2': [0, 0],
-        'kernel_l2': 0,
-        'random_seed': 0
-    }
-
-    model = PNN1(**pnn1_params)
-elif algo == 'fast_ctr':
-    fast_ctr_params = {
+    })
+d_name_model['fnn'] = FNN(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
         'opt_algo': 'adam',
-        'learning_rate': 0.001,
+        'learning_rate': 0.0001,
         'layer_l2': [0, 0],
-        'kernel_l2': 0,
         'random_seed': 0
-    }
-
-    model = Fast_CTR(**fast_ctr_params)
-elif algo == 'fast_ctr_concat':
-    fast_ctr_concat_params = {
-        'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'gd',
-        'learning_rate': 0.1,
-        'layer_l2': [0, 0],
-        'kernel_l2': 0,
-        'random_seed': 0
-    }
-
-    model = Fast_CTR_Concat(**fast_ctr_concat_params)
-elif algo == 'pnn1_fixed':
-    pnn1_fixed_params = {
-        'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'gd',
-        'learning_rate': 0.1,
-        'layer_l2': [0, 0.1],
-        'kernel_l2': 0,
-        'random_seed': 0
-    }
-
-    model = PNN1_Fixed(**pnn1_fixed_params)
-elif algo == 'pnn2':
-    pnn2_params = {
+    })
+d_name_model['pnn1'] = PNN1(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
         'opt_algo': 'adam',
-        'learning_rate': 0.001,
+        'learning_rate': 0.0001,
         'layer_l2': [0, 0],
         'kernel_l2': 0,
         'random_seed': 0
-    }
-    print 'pnn2, config:'
-    print pnn2_params
+    })
+d_name_model['pnn1_fixed'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['pnn2'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['fast_ctr_concat'] =  Fast_CTR_Concat(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['fast_ctr'] = Fast_CTR(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+})
+
+#for name in d_name_model.keys():
+for name in ['pnn1']:
+    print 'name', name
     sys.stdout.flush()
-
-    model = PNN2(**pnn2_params)
-
-if algo in {'fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2', 'fast_ctr', 'fast_ctr_concat'}:
-    train_data = utils.split_data(train_data)
-    test_data = utils.split_data(test_data)
-
-train(model)
-
-# X_i, y_i = utils.slice(train_data, 0, 100)
-# fetches = [model.tmp1, model.tmp2]
-# tmp1, tmp2 = model.run(fetches, X_i, y_i)
-# print tmp1.shape
-# print tmp2.shape
+    model = d_name_model[name]
+    train(model)
