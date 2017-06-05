@@ -9,10 +9,10 @@ from time import gmtime, strftime
 import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat
 
-#train_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.7'
-#test_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.3'
-train_file = '../data_cretio/train.txt.100000.yx.0.7'
-test_file = '../data_cretio/train.txt.100000.yx.0.3'
+train_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.7'
+test_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.3'
+#train_file = '../data_cretio/train.txt.100000.yx.0.7'
+#test_file = '../data_cretio/train.txt.100000.yx.0.3'
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
@@ -162,7 +162,7 @@ d_name_model['fast_ctr'] = Fast_CTR(**{
 })
 
 #for name in d_name_model.keys():
-for name in ['pnn1']:
+for name in ['fast_ctr_concat', 'fnn']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]
