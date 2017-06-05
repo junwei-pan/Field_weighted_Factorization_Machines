@@ -24,6 +24,16 @@ For any questions, please report the issues or contact Junwei Pan(pandevirus@gma
 
 ## Performance
 
+### Models Compare
+
+Config:
+
+factor dimension: 10
+optimizer: adam
+learning rate: 0.0001
+layer activation: tanh, none
+layer l2 norm: 0
+
 |Model|AUC or ROC|
 |fast_ctr|0.7650520|
 |fast_ctr_concat|0.765309|

@@ -160,9 +160,60 @@ d_name_model['fast_ctr'] = Fast_CTR(**{
         'kernel_l2': 0,
         'random_seed': 0
 })
+d_name_model['pnn1_fixed_0.001'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['pnn1_fixed_0.001_5'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 5, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['pnn1_fixed_0.001_20'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 20, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['pnn1_fixed_0.001_50'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 50, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['pnn1_fixed_0.001_gd'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'gd',
+        'learning_rate': 0.001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
 
 #for name in d_name_model.keys():
-for name in ['fast_ctr_concat', 'fnn']:
+#for name in ['fast_ctr_concat', 'fnn']:
+for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]
