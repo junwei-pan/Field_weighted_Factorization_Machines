@@ -213,7 +213,8 @@ d_name_model['pnn1_fixed_0.001_gd'] = PNN1_Fixed(**{
 
 #for name in d_name_model.keys():
 #for name in ['fast_ctr_concat', 'fnn']:
-for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd']:
+#for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd']:
+for name in ['lr', 'fm']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]
