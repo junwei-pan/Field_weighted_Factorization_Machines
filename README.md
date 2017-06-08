@@ -36,9 +36,21 @@ layer l2 norm: 0
 
 |Model|AUC or ROC|
 |---|---|
-|fast_ctr|0.7650520|
+|fast_ctr|0.76505|
 |fast_ctr_concat|0.765309|
 |fnn|0.765309|
 |pnn1|0.767347|
 |pnn2|0.769773|
 |pnn1_fixed|0.775139|
+
+### Fine Tune pnn1_fixed
+
+|Parameter| AUC|
+|---|---|
+|lr=0.001|0.773991|
+|lr=0.001, k=5|0.772792|
+|lr=0.001, k=20|0.774981|
+|lr=0.001, k=50|0.775141|
+|lr=0.001, gd|0.626260|
+|lr=0.001, drouput=0.5|0.632780|
+|lr=0.001, drouput=0.5, l2=0.5|0.622358|
