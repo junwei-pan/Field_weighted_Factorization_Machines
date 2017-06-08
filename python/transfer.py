@@ -1,34 +1,38 @@
 import sys
 
 # Transfer the original cretio dataset to libsvm format
-index_label = 0
+index_label = 23
 #lst_index_cat = range(14, 14 + 26)
 lst_index_cat = range(10)
 #num_field = 26
 #offset_train = 14
 #offset_test = 13
-thres = 20
+thres = 10
 
 d_field_fea = {}
 d_fea_index = {}
 d_field_fea_cnt = {}
-path_train = '/tmp/jwpan/data_cretio/train.txt'
-path_fea_index = 'featindex_thres' + str(thres) + '.txt'
+#path_train = '/tmp/jwpan/data_cretio/train.txt'
+path_train = '../data_yahoo/ctr_20170524_0530_0.003.txt'
+path_test = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
+path_fea_index = '../data_yahoo/featindex_thres' + str(thres) + '.txt'
 batch = 100000
-total = 45840617
+
+def get_lines_of_file(path):
+    n = 0
+    for i in open(path):
+        n += 1
+    return n
 
 def build_field_feature(path, mode):
+    total = get_lines_of_file(path)
     for i, line in enumerate(open(path)):
         if i % batch == batch - 1:
             print i * 1.0 / total
             sys.stdout.flush()
         lst = line.strip('\n').split('\t')
-        for idx_field in range(num_field):
-            if mode == 'train':
-                idx = idx_field + offset_train
-            elif mode == 'test':
-                idx = idx_field + offset_test
-            fea = lst[idx]
+        for idx_field in lst_index_cat:
+            fea = lst[idx_field]
             d_field_fea.setdefault(idx_field, set())
             d_field_fea[idx_field].add(fea)
             d_field_fea_cnt.setdefault(idx_field, {})
@@ -40,7 +44,7 @@ def create_fea_index(path):
     cnt_filter = 0
     index = 0
     file = open(path, 'w')
-    for idx_field in range(num_field):
+    for idx_field in lst_index_cat:
         for fea in d_field_fea[idx_field]:
             if d_field_fea_cnt[idx_field][fea] > thres:
                 d_fea_index[fea] = index
@@ -58,6 +62,7 @@ def create_yx(path, mode):
     # we need to filter all these samples, use cnt_filter as the counter.
     cnt_qualify = 0
     cnt_filter = 0
+    total = get_lines_of_file(path)
     file = open(path + '.thres' + str(thres) + '.yx', 'w')
     for i, line in enumerate(open(path)):
         if i % batch == batch - 1:
@@ -68,11 +73,7 @@ def create_yx(path, mode):
             res.append(lst[index_label])
         elif mode == 'test':
             res.append('0')
-        for idx_field in range(num_field):
-            if mode == 'train':
-                idx = idx_field + offset_train
-            elif mode == 'test':
-                idx = idx_field + offset_test
+        for idx in lst_index_cat:
             fea = lst[idx]
             if d_fea_index.has_key(fea):
                 index = d_fea_index[fea]
@@ -97,4 +98,5 @@ create_fea_index(path_fea_index)
 
 print 'create yx'
 create_yx(path_train, 'train')
+create_yx(path_test, 'train')
 #create_yx(path_test, 'test')
