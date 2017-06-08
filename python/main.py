@@ -9,10 +9,10 @@ from time import gmtime, strftime
 import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat
 
-train_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.7'
-test_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.3'
-#train_file = '../data_cretio/train.txt.100000.yx.0.7'
-#test_file = '../data_cretio/train.txt.100000.yx.0.3'
+#train_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.7'
+#test_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.3'
+train_file = '../data_cretio/train.txt.100000.yx.0.7'
+test_file = '../data_cretio/train.txt.100000.yx.0.3'
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
@@ -92,12 +92,26 @@ d_name_model['lr'] = LR(**{
         'l2_weight': 0,
         'random_seed': 0
     })
-
 d_name_model['fm'] = FM(**{
         'input_dim': input_dim,
         'factor_order': 10,
         'opt_algo': 'adam',
         'learning_rate': 0.0001,
+        'l2_w': 0,
+        'l2_v': 0,
+    })
+d_name_model['lr_0.001'] = LR(**{
+        'input_dim': input_dim,
+        'opt_algo': 'adam',
+        'learning_rate': 0.001,
+        'l2_weight': 0,
+        'random_seed': 0
+    })
+d_name_model['fm_0.001'] = FM(**{
+        'input_dim': input_dim,
+        'factor_order': 10,
+        'opt_algo': 'adam',
+        'learning_rate': 0.001,
         'l2_w': 0,
         'l2_v': 0,
     })
@@ -214,7 +228,8 @@ d_name_model['pnn1_fixed_0.001_gd'] = PNN1_Fixed(**{
 #for name in d_name_model.keys():
 #for name in ['fast_ctr_concat', 'fnn']:
 #for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd']:
-for name in ['lr', 'fm']:
+#for name in ['lr', 'fm']:
+for name in ['lr_0.001', 'fm_0.001']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]
