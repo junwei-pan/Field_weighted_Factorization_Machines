@@ -14,6 +14,15 @@ This script will generate an output data file named ${path_train}.yx and a featu
 
 This script will split the data to train/test dataset respectively.
 
+## Dataset Stats
+
+  - # positive samples: 32,086,035
+  - # negative samples: 13,754,582
+
+Uniq Features for each field:
+
+[551, 92010, 77775, 302, 16, 11594, 624, 3, 32199, 5002, 91955, 3162, 26, 10119, 90453, 10, 4287, 1924, 4, 91489, 16, 15, 39011, 74, 30895, 1436]
+
 ## Model
 
 LR, FM, FNN, CCPM and PNN are all implemented in `models.py`, based on TensorFlow.
