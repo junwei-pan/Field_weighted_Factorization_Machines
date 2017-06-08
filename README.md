@@ -35,9 +35,10 @@ layer activation: tanh, none
 layer l2 norm: 0
 
 |Model|AUC or ROC|
+|---|---|
 |fast_ctr|0.7650520|
 |fast_ctr_concat|0.765309|
 |fnn|0.765309|
 |pnn1|0.767347|
-|pnn2|0.775139|
+|pnn2|0.769773|
 |pnn1_fixed|0.775139|

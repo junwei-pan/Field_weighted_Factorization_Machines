@@ -30,7 +30,7 @@ num_feas = len(utils.FIELD_SIZES)
 
 min_round = 1
 num_round = 1000
-early_stop_round = 20
+early_stop_round = 2
 batch_size = 2000
 
 field_sizes = utils.FIELD_SIZES
@@ -74,8 +74,10 @@ def train(model):
         sys.stdout.flush()
         history_score.append(test_score)
         if i > min_round and i > early_stop_round:
-            if np.argmax(history_score) == i - early_stop_round and history_score[-1] - history_score[
-                        -1 * early_stop_round] < 1e-5:
+            #if np.argmax(history_score) == i - early_stop_round and history_score[-1] - history_score[
+            #            -1 * early_stop_round] < 1e-5:
+            i_max = np.argmax(history_score)
+            if i - i_max >= early_stop_round:
                 print 'early stop\nbest iteration:\n[%d]\teval-auc: %f' % (
                     np.argmax(history_score), np.max(history_score))
                 sys.stdout.flush()
@@ -144,7 +146,7 @@ d_name_model['pnn1_fixed'] = PNN1_Fixed(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['pnn2'] = PNN1_Fixed(**{
+d_name_model['pnn2'] = PNN2(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -224,12 +226,32 @@ d_name_model['pnn1_fixed_0.001_gd'] = PNN1_Fixed(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
+d_name_model['pnn1_fixed_0.001_dropout-0.5'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 0.5],
+        'opt_algo': 'adam',
+        'learning_rate': 0.001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['pnn1_fixed_0.001_l2-1-0.5'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 0.5],
+        'opt_algo': 'adam',
+        'learning_rate': 0.001,
+        'layer_l2': [0, 0.5],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
 
 #for name in d_name_model.keys():
 #for name in ['fast_ctr_concat', 'fnn']:
 #for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd']:
-#for name in ['lr', 'fm']:
-for name in ['lr_0.001', 'fm_0.001']:
+#for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd', 'pnn1_fixed_0.001_dropout-0.5', 'pnn1_fixed_0.001_l2-1-0.5']:
+for name in ['pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd', 'pnn1_fixed_0.001_dropout-0.5', 'pnn1_fixed_0.001_l2-1-0.5']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]

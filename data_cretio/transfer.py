@@ -6,6 +6,8 @@ lst_index_cat = range(14, 1 + 13 + 26)
 num_field = 26
 offset_train = 14
 offset_test = 13
+# Only those features occurs more tha $thres times in the whole
+# dataset will be considered.
 thres = 20
 
 d_field_fea = {}
