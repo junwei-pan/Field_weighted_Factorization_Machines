@@ -6,9 +6,10 @@ from scipy.sparse import coo_matrix
 
 DTYPE = tf.float64
 
-FIELD_SIZES = [0] * 26
+FIELD_SIZES = [0] * 15
 #with open('/tmp/jwpan/data_cretio/featindex_thres20.txt') as fin:
-with open('../data_cretio/featindex.txt.100000') as fin:
+#with open('../data_cretio/featindex.txt.100000') as fin:
+with open('../data_yahoo/featindex_thres10.txt') as fin:
     for line in fin:
         line = line.strip().split(':')
         if len(line) > 1:
