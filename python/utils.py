@@ -13,7 +13,7 @@ with open('../data_yahoo/featindex_thres10.txt') as fin:
     for line in fin:
         line = line.strip().split(':')
         if len(line) > 1:
-            f = int(line[0]) - 1
+            f = int(line[0])
             FIELD_SIZES[f] += 1
 print 'field sizes:', FIELD_SIZES
 FIELD_OFFSETS = [sum(FIELD_SIZES[:i]) for i in range(len(FIELD_SIZES))]
