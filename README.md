@@ -78,7 +78,7 @@ Testing dataset: 7,990,874 samples, 15,759 positive and 7,975,115 negative, tota
 Number of uniq features for each field, only those features occurs more than 10 times in the training data will be preserved.
 
 |Fields|#Uniq Features|
-|--|--|
+|---|---|
 |PUBLISHER_ID|5,647|
 |PAGE_TLD|9,640|
 |SUBDOMAIN|22|
