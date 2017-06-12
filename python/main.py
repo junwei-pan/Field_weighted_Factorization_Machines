@@ -148,6 +148,16 @@ d_name_model['pnn1_0.00001'] = PNN1(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
+d_name_model['pnn1_0.0005'] = PNN1(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
 d_name_model['pnn1_fixed'] = PNN1_Fixed(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -178,6 +188,16 @@ d_name_model['pnn2_0.00001'] = PNN2(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
+d_name_model['pnn2_0.0005'] = PNN2(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
 d_name_model['fast_ctr_concat'] =  Fast_CTR_Concat(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -204,6 +224,16 @@ d_name_model['pnn1_fixed_0.001'] = PNN1_Fixed(**{
         'layer_keeps': [1, 1],
         'opt_algo': 'adam',
         'learning_rate': 0.001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['pnn1_fixed_0.0005'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
         'layer_l2': [0, 0],
         'kernel_l2': 0,
         'random_seed': 0
@@ -286,7 +316,7 @@ d_name_model['pnn1_fixed_0.001_l2-1-0.5'] = PNN1_Fixed(**{
 #for name in ['pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd', 'pnn1_fixed_0.001_dropout-0.5', 'pnn1_fixed_0.001_l2-1-0.5']:
 #for name in ['pnn1', 'pnn2', 'pnn1_fixed', 'pnn1_fixed_0.001']:
 #for name in ['pnn1_fixed_0.00001']:
-for name in ['pnn1_0.00001', 'pnn2_0.00001', 'pnn1_fixed_0.00001']:
+for name in ['pnn1_0.0005', 'pnn2_0.0005', 'pnn1_fixed_0.0005']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]

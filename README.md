@@ -98,4 +98,8 @@ Number of uniq features for each field, only those features occurs more than 10 
 
 ## Performance
 
-
+|Model|AUC|
+|---|---|
+|PNN1|0.848153|
+|PNN2|0.854713|
+|PNN1_Fixed|0.857946|
