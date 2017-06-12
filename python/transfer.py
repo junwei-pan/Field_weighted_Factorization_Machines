@@ -1,13 +1,16 @@
 import sys
 
 # Transfer the original cretio dataset to libsvm format
-index_label = 23
+index_label = 28
 #lst_index_cat = range(14, 14 + 26)
-lst_index_cat = range(10)
+lst_index_cat = range(15)
 #num_field = 26
 #offset_train = 14
 #offset_test = 13
 thres = 10
+
+print "index_label", index_label
+print "lst_index_cat", lst_index_cat
 
 d_field_fea = {}
 d_fea_index = {}
@@ -70,11 +73,18 @@ def create_yx(path, mode):
         res = []
         lst = line.strip('\n').split('\t')
         if mode == 'train':
-            res.append(lst[index_label])
+            label = lst[index_label]
+            if label == '-1':
+                label = '0'
+            res.append(label)
+            if i == 0:
+                print 'label', label
         elif mode == 'test':
             res.append('0')
         for idx in lst_index_cat:
             fea = lst[idx]
+            if i == 0:
+                print 'idx: %d, fea: %s' % (idx, fea)
             if d_fea_index.has_key(fea):
                 index = d_fea_index[fea]
                 res.append("%d:1" % index)
