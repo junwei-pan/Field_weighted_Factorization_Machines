@@ -17,8 +17,9 @@ d_fea_index = {}
 d_field_fea_cnt = {}
 #path_train = '/tmp/jwpan/data_cretio/train.txt'
 path_train = '../data_yahoo/ctr_20170524_0530_0.003.txt'
+#path_train = '../data_yahoo/ctr_20170517_0530_0.015.txt'
 path_test = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
-path_fea_index = '../data_yahoo/featindex_thres' + str(thres) + '.txt'
+path_fea_index = '../data_yahoo/featindex_3m_thres' + str(thres) + '.txt'
 batch = 100000
 
 def get_lines_of_file(path):
@@ -101,12 +102,11 @@ def create_yx(path, mode):
 
 print 'build field feature'
 build_field_feature(path_train, 'train')
-#build_field_feature(path_test, 'test')
 
 print 'create fea index'
 create_fea_index(path_fea_index)
 
 print 'create yx'
-create_yx(path_train, 'train')
+#create_yx(path_train, 'train')
 create_yx(path_test, 'train')
 #create_yx(path_test, 'test')

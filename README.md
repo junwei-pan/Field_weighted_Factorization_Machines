@@ -68,7 +68,7 @@ layer l2 norm: 0
 
 ## One Week Dataset(20170524-20170530 for train, 20170531 for test)
 
-Training dataset: 3,571,405 samples, 1,556,404 positive and 2,015,001 negative, positive sample has done 0.003 downsampleing
+Training dataset: 3,571,405 samples, 1,556,404 positive and 2,015,001 negative, positive sample has done 0.003 downsampleing. 34,288 unique features.
 
 Testing dataset: 7,990,874 samples, 15,759 positive and 7,975,115 negative, total dataset has done 0.1 downsampling.
 
