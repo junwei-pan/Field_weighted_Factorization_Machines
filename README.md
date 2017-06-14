@@ -66,17 +66,15 @@ layer l2 norm: 0
 
 # Yahoo CTR Dataset
 
-## One Week Dataset(20170524-20170530 for train, 20170531 for test)
+## One Week Dataset(3m)
+
+20170524-20170530 for train, 20170531 for test, please refer to [CTR_Data_Generation](https://git.corp.yahoo.com/jwpan/CTR_Data_Generation) for more information.
 
 Training dataset: 3,571,405 samples, 1,556,404 positive and 2,015,001 negative, positive sample has done 0.003 downsampleing. 34,288 unique features.
 
 Testing dataset: 7,990,874 samples, 15,759 positive and 7,975,115 negative, total dataset has done 0.1 downsampling.
 
-## Field and Features:
-
-15 Fields.
-
-Number of uniq features for each field, only those features occurs more than 10 times in the training data will be preserved.
+There are totally 15 Fields, and 34,288 unique features(with number of occurence more than 10), following is the number of unique features for each field:
 
 |Fields|#Uniq Features|
 |---|---|
@@ -93,7 +91,7 @@ Number of uniq features for each field, only those features occurs more than 10 
 |AD_ID|6,605|
 |CRRATIVE_ID|4,964|
 |DEVICE_TYPE_ID|4|
-|LINE_ID|1992|
+|LINE_ID|1,992|
 |USER_ID|4,771|
 
 ## Performance
@@ -103,3 +101,40 @@ Number of uniq features for each field, only those features occurs more than 10 
 |PNN1|0.848153|
 |PNN2|0.854713|
 |PNN1_Fixed|0.857946|
+
+## Two Weeks Dataset(25m)
+
+20170517-20170530 for train, 20170531 for test.
+
+Training dataset: 24,885,731 samples, 3,283,760 positive and 21,601,971 negative, positive sample has done 0.015 downsampleing
+
+Testing dataset: 7,990,874 samples, 15,759 positive and 7,975,115 negative, total dataset has done 0.1 downsampling.
+
+There are totally 15 Fields, and 156,393 unique features(with number of occurence more than 10), following is the number of unique features for each field:
+
+|Fields|#Uniq Features|
+|---|---|
+|PUBLISHER_ID|43|
+|PAGE_TLD|18,576|
+|SUBDOMAIN|43,187|
+|LAYOUT_ID|24|
+|HOUR_OF_DAY|24|
+|DAY_OF_WEEK|7|
+|GENDER|3|
+|AD_POSITION_ID|8|
+|AGE_BUCKET|7|
+|ADVERTISER_ID|642|
+|AD_ID|10,482|
+|CRRATIVE_ID|7,160|
+|DEVICE_TYPE_ID|4|
+|LINE_ID|2,530|
+|USER_ID|73,696|
+
+## Performance
+
+|Model|AUC|
+|---|---|
+|PNN1|0.849432|
+|PNN2|0.858516|
+|PNN1_Fixed|0.860679|
+
