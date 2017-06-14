@@ -323,13 +323,11 @@ class PNN1:
                         k1),
                     [-1, factor_order, layer_sizes[2]]),
                 1)
-            print("l.shape", l.shape)
             l = tf.nn.dropout(
                 utils.activate(
                     tf.matmul(l, w1) + b1 + p,
                     layer_acts[1]),
                 layer_keeps[1])
-            print("after l.shape", l.shape)
 
             for i in range(2, len(layer_sizes) - 1):
                 wi = self.vars['w%d' % i]
@@ -436,7 +434,6 @@ class Fast_CTR:
                     tf.matmul(l, w1) + b1,
                     layer_acts[1]),
                 layer_keeps[1])
-            print("after l.shape", l.shape)
 
             self.y_prob = tf.sigmoid(l)
 
@@ -533,7 +530,6 @@ class Fast_CTR_Concat:
                     tf.matmul(l, w1) + b1,
                     layer_acts[1]),
                 layer_keeps[1])
-            print("after l.shape", l.shape)
 
             self.y_prob = tf.sigmoid(l)
 
@@ -711,7 +707,7 @@ class FMNN_3WAY:
             init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
             init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
         init_vars.append(('w_l', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
-        init_vars.append(('w_p', [num_inputs * num_inputs, layer_sizes[2]], 'tnormal', dtype))
+        init_vars.append(('w_p', [num_inputs * (num_inputs-1)/2 * factor_order, layer_sizes[2]], 'tnormal', dtype))
         #init_vars.append(('w1', [num_inputs * factor_order + num_inputs * num_inputs, layer_sizes[2]], 'tnormal', dtype))
         init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
         for i in range(2, len(layer_sizes) - 1):
@@ -741,21 +737,31 @@ class FMNN_3WAY:
             # This is where W_p \cdot p happens.
             # k1 is \theta, which is the weight for each field(feature) vector
 
-            p2 = []
+            index_left = []
+            index_right = []
+
             for i in range(num_inputs):
-                for j in range(num_inputs):
-                    p2.append(tf.multiply(l[i], l[j]))
+                for j in range(num_inputs - i - 1):
+                    index_left.append(i)
+            for i in range(num_inputs):
+                for j in range(num_inputs - i - 1):
+                    index_right.append(i + j + 1)
 
-            p = tf.matmul(
-                tf.reshape(l, [-1, num_inputs, factor_order]),
-                tf.transpose(
-                    tf.reshape(l, [-1, num_inputs, factor_order]), [0, 2, 1])
-            )
+            l_trans = tf.transpose(tf.reshape(l, [-1, num_inputs, factor_order]), [1, 0, 2])
+            print 'l_trans', l_trans.shape
 
+            l_left = tf.gather(l_trans, index_left)
+            l_right = tf.gather(l_trans, index_right)
+            print 'l_left', l_left.shape
+            print 'l_right', l_right.shape
+
+            p = tf.transpose(tf.add(l_left, l_right), [1, 0, 2])
+
+            print 'p', p.shape
             p = tf.nn.dropout(
                 utils.activate(
                     tf.matmul(
-                        tf.reshape(p, [-1, num_inputs * num_inputs]),
+                        tf.reshape(p, [-1, num_inputs*(num_inputs-1)/2 * factor_order]),
                         w_p),
                     'none'
                 ),

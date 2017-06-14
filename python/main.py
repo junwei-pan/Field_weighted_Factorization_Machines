@@ -7,14 +7,14 @@ import tensorflow as tf
 from time import gmtime, strftime
 
 import utils
-from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FMNN_3WAY
 
 #train_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.7'
 #test_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.3'
-#train_file = '../data_cretio/train.txt.100000.yx.0.7'
-#test_file = '../data_cretio/train.txt.100000.yx.0.3'
-train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
-test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+train_file = '../data_cretio/train.txt.100000.yx.0.7'
+test_file = '../data_cretio/train.txt.100000.yx.0.3'
+#train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
+#test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
@@ -308,6 +308,16 @@ d_name_model['pnn1_fixed_0.001_l2-1-0.5'] = PNN1_Fixed(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
+d_name_model['fmnn_3way'] = FMNN_3WAY(**{
+    'layer_sizes': [field_sizes, 10, 1],
+    'layer_acts': ['tanh', 'none'],
+    'layer_keeps': [1, 1],
+    'opt_algo': 'adam',
+    'learning_rate': 0.0001,
+    'layer_l2': [0, 0],
+    'kernel_l2': 0,
+    'random_seed': 0
+})
 
 #for name in d_name_model.keys():
 #for name in ['fast_ctr_concat', 'fnn']:
@@ -316,7 +326,8 @@ d_name_model['pnn1_fixed_0.001_l2-1-0.5'] = PNN1_Fixed(**{
 #for name in ['pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd', 'pnn1_fixed_0.001_dropout-0.5', 'pnn1_fixed_0.001_l2-1-0.5']:
 #for name in ['pnn1', 'pnn2', 'pnn1_fixed', 'pnn1_fixed_0.001']:
 #for name in ['pnn1_fixed_0.00001']:
-for name in ['pnn1_0.0005', 'pnn2_0.0005', 'pnn1_fixed_0.0005']:
+#for name in ['pnn1_0.0005', 'pnn2_0.0005', 'pnn1_fixed_0.0005']:
+for name in ['pnn1_fixed']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]
