@@ -755,7 +755,7 @@ class FMNN_3WAY:
             print 'l_left', l_left.shape
             print 'l_right', l_right.shape
 
-            p = tf.transpose(tf.add(l_left, l_right), [1, 0, 2])
+            p = tf.transpose(tf.multiply(l_left, l_right), [1, 0, 2])
 
             print 'p', p.shape
             p = tf.nn.dropout(

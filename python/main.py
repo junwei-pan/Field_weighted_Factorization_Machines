@@ -11,18 +11,11 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 
 #train_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.7'
 #test_file = '/tmp/jwpan/data_cretio/train.txt.thres20.yx.0.3'
-<<<<<<< HEAD
-train_file = '../data_cretio/train.txt.100000.yx.0.7'
-test_file = '../data_cretio/train.txt.100000.yx.0.3'
-#train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
-#test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
-=======
 #train_file = '../data_cretio/train.txt.100000.yx.0.7'
 #test_file = '../data_cretio/train.txt.100000.yx.0.3'
 #train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
-train_file = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
-test_file = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
->>>>>>> Update
+train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
+test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
@@ -374,8 +367,9 @@ d_name_model['fmnn_3way'] = FMNN_3WAY(**{
 #for name in ['pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd', 'pnn1_fixed_0.001_dropout-0.5', 'pnn1_fixed_0.001_l2-1-0.5']:
 #for name in ['pnn1', 'pnn2', 'pnn1_fixed', 'pnn1_fixed_0.001']:
 #for name in ['pnn1_fixed_0.00001']:
-#for name in ['pnn1_0.0005', 'pnn2_0.0005', 'pnn1_fixed_0.0005']:
-for name in ['pnn1_fixed_0.0005_k50', 'pnn1_fixed_0.0005_k100']:
+#for name in ['fmnn_3way']:
+#for name in ['fm']:
+for name in ['pnn1_0.0005', 'pnn2_0.0005', 'pnn1_fixed_0.0005']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]
