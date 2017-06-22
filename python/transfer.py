@@ -16,10 +16,11 @@ d_field_fea = {}
 d_fea_index = {}
 d_field_fea_cnt = {}
 #path_train = '/tmp/jwpan/data_cretio/train.txt'
-path_train = '../data_yahoo/ctr_20170524_0530_0.003.txt'
-#path_train = '../data_yahoo/ctr_20170517_0530_0.015.txt'
+#path_train = '../data_yahoo/ctr_20170524_0530_0.003.txt'
+path_train = '../data_yahoo/ctr_20170517_0530_0.015.txt'
 path_test = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
-path_fea_index = '../data_yahoo/featindex_3m_thres' + str(thres) + '.txt'
+#path_fea_index = '../data_yahoo/featindex_3m_thres' + str(thres) + '.txt'
+path_fea_index = '../data_yahoo/featindex_25m_thres' + str(thres) + '.txt'
 batch = 100000
 
 def get_lines_of_file(path):
@@ -51,7 +52,8 @@ def create_fea_index(path):
     for idx_field in lst_index_cat:
         for fea in d_field_fea[idx_field]:
             if d_field_fea_cnt[idx_field][fea] > thres:
-                d_fea_index[fea] = index
+                d_fea_index.setdefault(idx_field, {})
+                d_fea_index[idx_field][fea] = index
                 file.write("%d:%s\t%d\n" % (idx_field, fea, index))
                 index += 1
                 cnt_qualify += 1
@@ -86,8 +88,8 @@ def create_yx(path, mode):
             fea = lst[idx]
             if i == 0:
                 print 'idx: %d, fea: %s' % (idx, fea)
-            if d_fea_index.has_key(fea):
-                index = d_fea_index[fea]
+            if d_fea_index.has_key(idx) and d_fea_index[idx].has_key(fea):
+                index = d_fea_index[idx][fea]
                 res.append("%d:1" % index)
             else:
                 continue
@@ -107,6 +109,6 @@ print 'create fea index'
 create_fea_index(path_fea_index)
 
 print 'create yx'
-#create_yx(path_train, 'train')
+create_yx(path_train, 'train')
 create_yx(path_test, 'train')
 #create_yx(path_test, 'test')
