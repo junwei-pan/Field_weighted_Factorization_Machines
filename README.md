@@ -144,4 +144,4 @@ There are totally 15 Fields, and 156,393 unique features(with number of occurenc
 |PwFM w/ Dropout|0.857638|
 
 
-<a name="myfootnote1">1</a>: Footnote content goes here
+<a name="myfootnote1">1</a>: The VW model use addition numerical features(CTR) besides the categorical features. Here is the CTR feature list: TLD_LAYOUT_CTR, TLD_CAMPAIGN_CTR, TLD_IO_CTR, PUB_TLD_LAYOUT_CTR, TLD_CTR, TLD_AD_CTR, PUB_TLD_SEG_AD_CTR
