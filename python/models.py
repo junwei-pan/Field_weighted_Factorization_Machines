@@ -45,7 +45,7 @@ class LR:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
@@ -97,7 +97,7 @@ class FM:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
@@ -173,7 +173,7 @@ class FNN:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
@@ -258,7 +258,7 @@ class CCPM:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
@@ -369,7 +369,7 @@ class PNN1:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
@@ -466,7 +466,7 @@ class Fast_CTR:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
@@ -562,13 +562,13 @@ class Fast_CTR_Concat:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
 class PNN1_Fixed:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,
-                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None):
+                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=True):
         """
         # Arguments:
             layer_size: [num_fields, factor_layer, l_p size]
@@ -606,7 +606,10 @@ class PNN1_Fixed:
             b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
             # Multiply SparseTensor X[i] by dense matrix w0[i]
             xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs)]
-            x = tf.concat([xw[i] + b0[i] for i in range(num_inputs)], 1)
+            if has_field_bias:
+                x = tf.concat([xw[i] + b0[i] for i in range(num_inputs)], 1)
+            else:
+                x = tf.concat([xw[i] for i in range(num_inputs)], 1)
             l = tf.nn.dropout(
                 utils.activate(x, layer_acts[0]),
                 layer_keeps[0])
@@ -629,14 +632,11 @@ class PNN1_Fixed:
                         w_p),
                     'none'
                 ),
-                1.0
+                layer_keeps[1]
             )
 
-            l = tf.nn.dropout(
-                utils.activate(
-                    tf.matmul(l, w_l) + b1 + p,
-                    layer_acts[1]),
-                layer_keeps[1])
+            l = utils.activate(tf.matmul(l, w_l) + b1 + p,
+                    layer_acts[1])
 
             for i in range(2, len(layer_sizes) - 1):
                 wi = self.vars['w%d' % i]
@@ -682,11 +682,11 @@ class PNN1_Fixed:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
-class FMNN_3WAY:
+class FwFM:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None):
         """
@@ -707,7 +707,7 @@ class FMNN_3WAY:
             init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
             init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
         init_vars.append(('w_l', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
-        init_vars.append(('w_p', [num_inputs * (num_inputs-1)/2 * factor_order, layer_sizes[2]], 'tnormal', dtype))
+        init_vars.append(('w_p', [num_inputs * (num_inputs-1)/2, layer_sizes[2]], 'tnormal', dtype))
         #init_vars.append(('w1', [num_inputs * factor_order + num_inputs * num_inputs, layer_sizes[2]], 'tnormal', dtype))
         init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
         for i in range(2, len(layer_sizes) - 1):
@@ -743,8 +743,6 @@ class FMNN_3WAY:
             for i in range(num_inputs):
                 for j in range(num_inputs - i - 1):
                     index_left.append(i)
-            for i in range(num_inputs):
-                for j in range(num_inputs - i - 1):
                     index_right.append(i + j + 1)
 
             l_trans = tf.transpose(tf.reshape(l, [-1, num_inputs, factor_order]), [1, 0, 2])
@@ -757,22 +755,22 @@ class FMNN_3WAY:
 
             p = tf.transpose(tf.multiply(l_left, l_right), [1, 0, 2])
 
+            p = tf.reduce_sum(p, 2)
+
             print 'p', p.shape
             p = tf.nn.dropout(
                 utils.activate(
                     tf.matmul(
-                        tf.reshape(p, [-1, num_inputs*(num_inputs-1)/2 * factor_order]),
+                        tf.reshape(p, [-1, num_inputs*(num_inputs-1)/2]),
                         w_p),
                     'none'
                 ),
-                1.0
+                layer_keeps[1]
             )
 
-            l = tf.nn.dropout(
-                utils.activate(
+            l = utils.activate(
                     tf.matmul(l, w_l) + b1 + p,
-                    layer_acts[1]),
-                layer_keeps[1])
+                    layer_acts[1])
 
             for i in range(2, len(layer_sizes) - 1):
                 wi = self.vars['w%d' % i]
@@ -818,7 +816,7 @@ class FMNN_3WAY:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
@@ -909,6 +907,6 @@ class PNN2:
     def dump(self, model_path):
         var_map = {}
         for name, var in self.vars.iteritems():
-            var_map[name] = self.run(var)
+            var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path

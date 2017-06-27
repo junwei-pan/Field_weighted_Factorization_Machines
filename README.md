@@ -134,8 +134,11 @@ There are totally 15 Fields, and 156,393 unique features(with number of occurenc
 
 |Model|AUC|
 |---|---|
-|FM|0.862444|
-|PNN1|0.850466|
-|PNN2|0.860435|
-|PNN1_Fixed|0.865073|
+|LR|0.849761|
+|FM|0.860515|
+|PNN1|0.850883|
+|PNN2|0.860930|
+|PwFM|0.863670|
+|PwFM w/o field bias|0.865237|
+|PwFM w/ Dropout|0.857638|
 

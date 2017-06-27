@@ -7,9 +7,9 @@ from scipy.sparse import coo_matrix
 DTYPE = tf.float64
 
 FIELD_SIZES = [0] * 26
-#with open('/tmp/jwpan/data_cretio/featindex_thres20.txt') as fin:
 #with open('../data_yahoo/dataset2/featindex_thres10.txt') as fin:
-with open('/tmp/jwpan/data_yahoo/dataset2/featindex_25m_thres10.txt') as fin:
+#with open('/tmp/jwpan/data_yahoo/dataset2/featindex_25m_thres10.txt') as fin:
+with open('../data_cretio/featindex.txt.100000') as fin:
     for line in fin:
         line = line.strip().split(':')
         if len(line) > 1:
@@ -173,6 +173,10 @@ def get_optimizer(opt_algo, learning_rate, loss):
         return tf.train.ProximalGradientDescentOptimizer(learning_rate).minimize(loss)
     elif opt_algo == 'rmsprop':
         return tf.train.RMSPropOptimizer(learning_rate).minimize(loss)
+    #elif opt_algo == 'momentum':
+    #    return tf.train.MomentumOptimizer(learning_rate).minimize(loss)
+    #elif opt_algo == 'nesterov':
+    #    return tf.train.MomentumOptimizer(learning_rate, use_nesterov = True).minimize(loss)
     else:
         return tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
 
