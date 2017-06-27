@@ -135,6 +135,7 @@ There are totally 15 Fields, and 156,393 unique features(with number of occurenc
 |Model|AUC|
 |---|---|
 |LR|0.849761|
+|VW<sup>[1](#myfootnote1)</sup>|0.859066|
 |FM|0.860515|
 |PNN1|0.850883|
 |PNN2|0.860930|
@@ -142,3 +143,5 @@ There are totally 15 Fields, and 156,393 unique features(with number of occurenc
 |PwFM w/o field bias|0.865237|
 |PwFM w/ Dropout|0.857638|
 
+
+<a name="myfootnote1">1</a>: Footnote content goes here
