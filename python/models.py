@@ -688,7 +688,7 @@ class PNN1_Fixed:
 
 class FwFM:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,
-                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=True):
+                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=True, l2_dict=None):
         """
         # Arguments:
             layer_size: [num_fields, factor_layer, l_p size]
@@ -789,19 +789,16 @@ class FwFM:
 
                 self.loss = tf.reduce_mean(
                     tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))
-                if layer_l2 is not None:
-                    # for i in range(num_inputs):
-                    self.loss += layer_l2[0] * tf.nn.l2_loss(tf.concat(xw, 1))
-                    for i in range(1, len(layer_sizes) - 1):
-                        if i == 1:
-                            self.loss += layer_l2[i] * tf.nn.l2_loss(w_l)
-                            self.loss += layer_l2[i] * tf.nn.l2_loss(w_p)
-                        else:
-                            wi = self.vars['w%d' % i]
-                            # bi = self.vars['b%d' % i]
-                            self.loss += layer_l2[i] * tf.nn.l2_loss(wi)
-                if kernel_l2 is not None:
-                    pass
+                # l2 regularization for the linear weights, embeddings and r
+                if l2_dict is not None:
+                    if l2_dict.has_key('linear_w'):
+                        self.loss += l2_dict['linear_w'] * tf.nn.l2_loss(w_l)
+                    if l2_dict.has_key('r'):
+                        self.loss += l2_dict['r'] * tf.nn.l2_loss(w_p)
+                    if l2_dict.has_key('v'):
+                        for i in range(num_inputs):
+                            self.loss += l2_dict['v'] * tf.nn.l2_loss(self.vars['w0_%d' % i])
+
                 self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
 
                 config = tf.ConfigProto()

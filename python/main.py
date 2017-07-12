@@ -15,8 +15,10 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #train_file = '../data_cretio/train.txt.100000.yx.0.7'
 #test_file = '../data_cretio/train.txt.100000.yx.0.3'
 #train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
-train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
-test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+#train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
+#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+train_file = '../data_yahoo/ctr_20170517_0530_0.015.txt.thres10.yx.100000'
+test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100000'
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
@@ -245,6 +247,21 @@ d_name_model['fwfm_0.0005_without_field_bias_20'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
+d_name_model['fwfm_0.0005_l2'] = FwFM(**{
+    'layer_sizes': [field_sizes, 10, 1],
+    'layer_acts': ['tanh', 'none'],
+    'layer_keeps': [1, 1],
+    'opt_algo': 'adam',
+    'learning_rate': 0.0005,
+    'layer_l2': [0, 0],
+    'kernel_l2': 0,
+    'random_seed': 0,
+    'l2_dict': {
+        'linear_w': 0.3,
+        'v': 0.3,
+        'r': 0.3
+    }
+})
 '''
 d_name_model['fwfm_0.0005_gd'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
@@ -308,7 +325,8 @@ d_name_model['fwfm_0.0005_adadelta'] = FwFM(**{
 #for name in ['pnn1_0.0005', 'pnn2_0.0005', 'pnn1_fixed_0.0005']:
 #for name in ['fmnn_3way', 'pnn1_fixed_0.0005_no_field_bias', 'pnn1_fixed_0.0005_dropout']:
 #for name in ['fwfm_0.0005', 'fwfm_0.0005_without_field_bias']:
-for name in ['pnn1_fixed_0.0005_no_field_bias', 'fwfm_0.0001_without_field_bias', 'fwfm_0.0005_without_field_bias_20']:
+#for name in ['pnn1_fixed_0.0005_no_field_bias', 'fwfm_0.0001_without_field_bias', 'fwfm_0.0005_without_field_bias_20']:
+for name in ['fwfm_0.0005_l2']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]
