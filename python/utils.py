@@ -112,31 +112,32 @@ def init_var_map(init_vars, init_path=None):
     if init_path is not None:
         load_var_map = pkl.load(open(init_path, 'rb'))
         print 'load variable map from', init_path, load_var_map.keys()
-    var_map = {}
-    for var_name, var_shape, init_method, dtype in init_vars:
-        if init_method == 'zero':
-            var_map[var_name] = tf.Variable(tf.zeros(var_shape, dtype=dtype), dtype=dtype)
-        elif init_method == 'one':
-            var_map[var_name] = tf.Variable(tf.ones(var_shape, dtype=dtype), dtype=dtype)
-        elif init_method == 'normal':
-            var_map[var_name] = tf.Variable(tf.random_normal(var_shape, mean=0.0, stddev=STDDEV, dtype=dtype),
-                                            dtype=dtype)
-        elif init_method == 'tnormal':
-            var_map[var_name] = tf.Variable(tf.truncated_normal(var_shape, mean=0.0, stddev=STDDEV, dtype=dtype),
-                                            dtype=dtype)
-        elif init_method == 'uniform':
-            var_map[var_name] = tf.Variable(tf.random_uniform(var_shape, minval=MINVAL, maxval=MAXVAL, dtype=dtype),
-                                            dtype=dtype)
-        elif isinstance(init_method, int) or isinstance(init_method, float):
-            var_map[var_name] = tf.Variable(tf.ones(var_shape, dtype=dtype) * init_method)
-        elif init_method in load_var_map:
-            if load_var_map[init_method].shape == tuple(var_shape):
-                var_map[var_name] = tf.Variable(load_var_map[init_method])
+    with tf.device('/cpu:0'):
+        var_map = {}
+        for var_name, var_shape, init_method, dtype in init_vars:
+            if init_method == 'zero':
+                var_map[var_name] = tf.Variable(tf.zeros(var_shape, dtype=dtype), dtype=dtype)
+            elif init_method == 'one':
+                var_map[var_name] = tf.Variable(tf.ones(var_shape, dtype=dtype), dtype=dtype)
+            elif init_method == 'normal':
+                var_map[var_name] = tf.Variable(tf.random_normal(var_shape, mean=0.0, stddev=STDDEV, dtype=dtype),
+                                                dtype=dtype)
+            elif init_method == 'tnormal':
+                var_map[var_name] = tf.Variable(tf.truncated_normal(var_shape, mean=0.0, stddev=STDDEV, dtype=dtype),
+                                                dtype=dtype)
+            elif init_method == 'uniform':
+                var_map[var_name] = tf.Variable(tf.random_uniform(var_shape, minval=MINVAL, maxval=MAXVAL, dtype=dtype),
+                                                dtype=dtype)
+            elif isinstance(init_method, int) or isinstance(init_method, float):
+                var_map[var_name] = tf.Variable(tf.ones(var_shape, dtype=dtype) * init_method)
+            elif init_method in load_var_map:
+                if load_var_map[init_method].shape == tuple(var_shape):
+                    var_map[var_name] = tf.Variable(load_var_map[init_method])
+                else:
+                    print 'BadParam: init method', init_method, 'shape', var_shape, load_var_map[init_method].shape
             else:
-                print 'BadParam: init method', init_method, 'shape', var_shape, load_var_map[init_method].shape
-        else:
-            print 'BadParam: init method', init_method
-    return var_map
+                print 'BadParam: init method', init_method
+        return var_map
 
 
 def activate(weights, activation_function):

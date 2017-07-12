@@ -5,6 +5,7 @@ import time
 import sys
 import tensorflow as tf
 from time import gmtime, strftime
+import pickle as pkl
 
 import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM
@@ -74,7 +75,13 @@ def train(model, name):
         train_score = roc_auc_score(train_data[1], train_preds)
         test_score = roc_auc_score(test_data[1], test_preds)
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-        model.dump('model/' + str(name) + '_epoch_' + str(i))
+        path_model = 'model/' + str(name) + '_epoch_' + str(i)
+        path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
+        model.dump(path_model)
+        d_label_score = {}
+        d_label_score['label'] = test_data[1]
+        d_label_score['score'] = test_preds
+        pkl.dump(d_label_score, open(path_label_score, 'wb'))
         sys.stdout.flush()
         history_score.append(test_score)
         if i > min_round and i > early_stop_round:
@@ -91,6 +98,7 @@ train_data = utils.split_data(train_data)
 test_data = utils.split_data(test_data)
 
 d_name_model = {}
+'''
 d_name_model['lr'] = LR(**{
         'input_dim': input_dim,
         'opt_algo': 'adam',
@@ -140,26 +148,6 @@ d_name_model['pnn1'] = PNN1(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['pnn1_0.00001'] = PNN1(**{
-        'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'adam',
-        'learning_rate': 0.00001,
-        'layer_l2': [0, 0],
-        'kernel_l2': 0,
-        'random_seed': 0
-    })
-d_name_model['pnn1_0.0005'] = PNN1(**{
-        'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'adam',
-        'learning_rate': 0.0005,
-        'layer_l2': [0, 0],
-        'kernel_l2': 0,
-        'random_seed': 0
-    })
 d_name_model['pnn1_fixed'] = PNN1_Fixed(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -170,6 +158,19 @@ d_name_model['pnn1_fixed'] = PNN1_Fixed(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
+'''
+d_name_model['pnn1_fixed_0.0005_no_field_bias'] = PNN1_Fixed(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+'''
 d_name_model['pnn2'] = PNN2(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -200,26 +201,7 @@ d_name_model['fast_ctr'] = Fast_CTR(**{
         'kernel_l2': 0,
         'random_seed': 0
 })
-d_name_model['pnn1_fixed_0.001'] = PNN1_Fixed(**{
-        'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'adam',
-        'learning_rate': 0.001,
-        'layer_l2': [0, 0],
-        'kernel_l2': 0,
-        'random_seed': 0
-    })
-d_name_model['pnn1_fixed_0.0005'] = PNN1_Fixed(**{
-        'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'adam',
-        'learning_rate': 0.0005,
-        'layer_l2': [0, 0],
-        'kernel_l2': 0,
-        'random_seed': 0
-    })
+'''
 d_name_model['fwfm_0.0005'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -230,6 +212,40 @@ d_name_model['fwfm_0.0005'] = FwFM(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
+d_name_model['fwfm_0.0005_without_field_bias'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_0.0001_without_field_bias'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_0.0005_without_field_bias_20'] = FwFM(**{
+        'layer_sizes': [field_sizes, 20, 1],
+        'layer_acts': ['tanh', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+'''
 d_name_model['fwfm_0.0005_gd'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -280,48 +296,7 @@ d_name_model['fwfm_0.0005_adadelta'] = FwFM(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['pnn1_fixed_0.0005_no_field_bias'] = PNN1_Fixed(**{
-        'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'adam',
-        'learning_rate': 0.0005,
-        'layer_l2': [0, 0],
-        'kernel_l2': 0,
-        'random_seed': 0,
-        'has_field_bias': False
-    })
-d_name_model['pnn1_fixed_0.0005_dropout'] = PNN1_Fixed(**{
-        'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 0.5],
-        'opt_algo': 'adam',
-        'learning_rate': 0.0005,
-        'layer_l2': [0, 0],
-        'kernel_l2': 0,
-        'random_seed': 0
-    })
-d_name_model['pnn1_fixed_0.0005_k15'] = PNN1_Fixed(**{
-        'layer_sizes': [field_sizes, 15, 1],
-        'layer_acts': ['tanh', 'none'],
-        'layer_keeps': [1, 1],
-        'opt_algo': 'adam',
-        'learning_rate': 0.0005,
-        'layer_l2': [0, 0],
-        'kernel_l2': 0,
-        'random_seed': 0
-    })
-d_name_model['fmnn_3way'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['tanh', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.0001,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0
-})
-
+'''
 #for name in d_name_model.keys():
 #for name in ['fast_ctr_concat', 'fnn']:
 #for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd']:
@@ -332,7 +307,8 @@ d_name_model['fmnn_3way'] = FwFM(**{
 #for name in ['fm']:
 #for name in ['pnn1_0.0005', 'pnn2_0.0005', 'pnn1_fixed_0.0005']:
 #for name in ['fmnn_3way', 'pnn1_fixed_0.0005_no_field_bias', 'pnn1_fixed_0.0005_dropout']:
-for name in ['fwfm_0.0005']:
+#for name in ['fwfm_0.0005', 'fwfm_0.0005_without_field_bias']:
+for name in ['pnn1_fixed_0.0005_no_field_bias', 'fwfm_0.0001_without_field_bias', 'fwfm_0.0005_without_field_bias_20']:
     print 'name', name
     sys.stdout.flush()
     model = d_name_model[name]
