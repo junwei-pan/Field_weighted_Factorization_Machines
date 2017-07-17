@@ -132,16 +132,19 @@ There are totally 15 Fields, and 156,393 unique features(with number of occurenc
 
 ## Performance
 
-|Model|AUC|
-|---|---|
-|LR|0.849761|
-|VW<sup>[1](#myfootnote1)</sup>|0.859066|
-|FM|0.860515|
-|PNN1|0.850883|
-|PNN2|0.860930|
-|FwFM|0.863670|
-|FwFM w/o field bias|0.865237|
-|FwFM w/ Dropout|0.857638|
+|Model|train loss|train AUC|test AUC|config|
+|---|---|---|---|---|
+|LR|0.276781|0.858286|0.849761|lr=0.0005,adam|
+|VW<sup>[1](#myfootnote1)</sup>|||0.859066|lr=0.0005,adam|
+|FM||0.878841|0.861942|lr=0.0005,adam,k=10|
+|PNN1||0.861991|0.850883|lr=0.0005,adam,k=10|
+|PNN2||0.878399|0.860930|lr=0.0005,adam,k=10|
+|FwFM||0.880590|0.864665|lr=0.0005,adam,k=10|
+|FwFM w/ field bias||0.881917|0.864626|lr=0.0005,adam,k=10|
+|FwFM w/ Dropout|||0.857638|lr=0.0005,adam,k=10|
+|FwFM,l2 on v||0.856198|0.852356|lr=0.001,adam,k=10,lambda=0.001|
+|FwFM,l2 on r||0.880738|0.864192|lr=0.001,adam,k=10,lambda=0.001|
+|FwFM,l2 on v,r||0.839635|0.840396|lr=0.001,adam,k=10,lambda=0.001,0.001|
 
 
 <a name="myfootnote1">1</a>: The VW model use addition numerical features(CTR) besides the categorical features. Here is the CTR feature list: TLD_LAYOUT_CTR, TLD_CAMPAIGN_CTR, TLD_IO_CTR, PUB_TLD_LAYOUT_CTR, TLD_CTR, TLD_AD_CTR, PUB_TLD_SEG_AD_CTR
