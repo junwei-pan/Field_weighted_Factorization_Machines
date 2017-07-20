@@ -689,7 +689,7 @@ class PNN1_Fixed:
 
 class FwFM:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,
-                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=True, l2_dict=None):
+                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=False, l2_dict=None):
         """
         # Arguments:
             layer_size: [num_fields, factor_layer, l_p size]
