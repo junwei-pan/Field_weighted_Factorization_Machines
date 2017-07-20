@@ -6,6 +6,7 @@ import utils
 
 dtype = utils.DTYPE
 
+gpu_device = '/gpu:0'
 
 class LR:
     def __init__(self, input_dim=None, output_dim=1, init_path=None, opt_algo='gd', learning_rate=1e-2,
@@ -715,9 +716,9 @@ class FwFM:
             layer_output = layer_sizes[i + 1]
             init_vars.append(('w%d' % i, [layer_input, layer_output], 'tnormal', dtype))
             init_vars.append(('b%d' % i, [layer_output], 'zero', dtype))
-        with tf.device('/cpu:0'):
-            self.graph = tf.Graph()
-            with self.graph.as_default():
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+            with tf.device(gpu_device):
                 if random_seed is not None:
                     tf.set_random_seed(random_seed)
                 self.X = [tf.sparse_placeholder(dtype) for i in range(num_inputs)]
@@ -725,8 +726,10 @@ class FwFM:
                 self.vars = utils.init_var_map(init_vars, init_path)
                 w0 = [self.vars['w0_%d' % i] for i in range(num_inputs)]
                 b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
-                # Multiply SparseTensor X[i] by dense matrix w0[i]
-                xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs)]
+            # Multiply SparseTensor X[i] by dense matrix w0[i]
+            xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs)]
+
+            with tf.device(gpu_device):
                 if has_field_bias:
                     x = tf.concat([xw[i] + b0[i] for i in range(num_inputs)], 1)
                 else:
@@ -741,26 +744,23 @@ class FwFM:
                 # This is where W_p \cdot p happens.
                 # k1 is \theta, which is the weight for each field(feature) vector
 
-                index_left = []
-                index_right = []
+            index_left = []
+            index_right = []
 
-                for i in range(num_inputs):
-                    for j in range(num_inputs - i - 1):
-                        index_left.append(i)
-                        index_right.append(i + j + 1)
+            for i in range(num_inputs):
+                for j in range(num_inputs - i - 1):
+                    index_left.append(i)
+                    index_right.append(i + j + 1)
 
+            with tf.device(gpu_device):
                 l_trans = tf.transpose(tf.reshape(l, [-1, num_inputs, factor_order]), [1, 0, 2])
-                print 'l_trans', l_trans.shape
-
                 l_left = tf.gather(l_trans, index_left)
                 l_right = tf.gather(l_trans, index_right)
+                p = tf.transpose(tf.multiply(l_left, l_right), [1, 0, 2])
+                p = tf.reduce_sum(p, 2)
+                print 'l_trans', l_trans.shape
                 print 'l_left', l_left.shape
                 print 'l_right', l_right.shape
-
-                p = tf.transpose(tf.multiply(l_left, l_right), [1, 0, 2])
-
-                p = tf.reduce_sum(p, 2)
-
                 print 'p', p.shape
                 p = tf.nn.dropout(
                     utils.activate(
@@ -801,10 +801,11 @@ class FwFM:
 
                 self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
 
-                config = tf.ConfigProto()
-                config.gpu_options.allow_growth = True
-                config.log_device_placement=True
-                self.sess = tf.Session(config=config)
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+            config.gpu_options.allow_growth = True
+            config.log_device_placement=True
+            self.sess = tf.Session(config=config)
+            with tf.device(gpu_device):
                 tf.global_variables_initializer().run(session=self.sess)
 
     def run(self, fetches, X=None, y=None):
