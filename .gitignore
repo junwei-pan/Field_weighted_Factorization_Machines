@@ -92,3 +92,5 @@ ENV/
 
 log
 .idea
+python/model
+python/test_gpu*.txt

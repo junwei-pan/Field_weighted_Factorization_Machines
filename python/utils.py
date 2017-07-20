@@ -10,7 +10,7 @@ FIELD_SIZES = [0] * 15
 #with open('../data_yahoo/dataset2/featindex_thres10.txt') as fin:
 #with open('../data_cretio/featindex.txt.100000') as fin:
 #with open('/tmp/jwpan/data_yahoo/dataset2/featindex_25m_thres10.txt') as fin:
-with open('../data_yahoo/featindex_25m_thres10.txt') as fin:
+with open('/homes/wenliangz/DL_MultiField_Categorical_Data/data_yahoo/featindex_25m_thres10.txt') as fin:
     for line in fin:
         line = line.strip().split(':')
         if len(line) > 1:
@@ -160,27 +160,27 @@ def activate(weights, activation_function):
 
 def get_optimizer(opt_algo, learning_rate, loss):
     if opt_algo == 'adaldeta':
-        return tf.train.AdadeltaOptimizer(learning_rate).minimize(loss)
+        return tf.train.AdadeltaOptimizer(learning_rate).minimize(loss, colocate_gradients_with_ops=True)
     elif opt_algo == 'adagrad':
-        return tf.train.AdagradOptimizer(learning_rate).minimize(loss)
+        return tf.train.AdagradOptimizer(learning_rate).minimize(loss, colocate_gradients_with_ops=True)
     elif opt_algo == 'adam':
-        return tf.train.AdamOptimizer(learning_rate).minimize(loss)
+        return tf.train.AdamOptimizer(learning_rate).minimize(loss, colocate_gradients_with_ops=True)
     elif opt_algo == 'ftrl':
-        return tf.train.FtrlOptimizer(learning_rate).minimize(loss)
+        return tf.train.FtrlOptimizer(learning_rate).minimize(loss, colocate_gradients_with_ops=True)
     elif opt_algo == 'gd':
-        return tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
+        return tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, colocate_gradients_with_ops=True)
     elif opt_algo == 'padagrad':
-        return tf.train.ProximalAdagradOptimizer(learning_rate).minimize(loss)
+        return tf.train.ProximalAdagradOptimizer(learning_rate).minimize(loss, colocate_gradients_with_ops=True)
     elif opt_algo == 'pgd':
-        return tf.train.ProximalGradientDescentOptimizer(learning_rate).minimize(loss)
+        return tf.train.ProximalGradientDescentOptimizer(learning_rate).minimize(loss, colocate_gradients_with_ops=True)
     elif opt_algo == 'rmsprop':
-        return tf.train.RMSPropOptimizer(learning_rate).minimize(loss)
+        return tf.train.RMSPropOptimizer(learning_rate).minimize(loss, colocate_gradients_with_ops=True)
     #elif opt_algo == 'momentum':
     #    return tf.train.MomentumOptimizer(learning_rate).minimize(loss)
     #elif opt_algo == 'nesterov':
     #    return tf.train.MomentumOptimizer(learning_rate, use_nesterov = True).minimize(loss)
     else:
-        return tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
+        return tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, colocate_gradients_with_ops=True)
 
 
 def gather_2d(params, indices):
