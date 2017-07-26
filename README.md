@@ -148,6 +148,7 @@ There are totally 15 Fields, and 156,393 unique features(with number of occurenc
 
 
 |k|train loss|Train AUC|Test AUC|
+|---|---|---|---|
 |5|0.259719|0.879381|0.862137|
 |10|0.260862|0.880590|0.864665|
 |15|0.258043|0.881974|0.864401|
