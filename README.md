@@ -147,4 +147,14 @@ There are totally 15 Fields, and 156,393 unique features(with number of occurenc
 |FwFM,l2 on v,r||0.839635|0.840396|lr=0.001,adam,k=10,lambda=0.001,0.001|
 
 
+|k|train loss|Train AUC|Test AUC|
+|5|0.259719|0.879381|0.862137|
+|10|0.260862|0.880590|0.864665|
+|15|0.258043|0.881974|0.864401|
+|20|0.257972|0.882248|0.863971|
+|30|0.258461|0.881841|0.864650|
+|50|0.257633|0.883046|0.865152|
+|100|0.258038|0.883044|0.864571|
+|200|0.258909|0.882531|0.864571|
+
 <a name="myfootnote1">1</a>: The VW model use addition numerical features(CTR) besides the categorical features. Here is the CTR feature list: TLD_LAYOUT_CTR, TLD_CAMPAIGN_CTR, TLD_IO_CTR, PUB_TLD_LAYOUT_CTR, TLD_CTR, TLD_AD_CTR, PUB_TLD_SEG_AD_CTR
