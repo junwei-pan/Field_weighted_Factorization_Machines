@@ -43,26 +43,13 @@ learning rate: 0.0001
 layer activation: tanh, none
 layer l2 norm: 0
 
-|Model|AUC or ROC|
-|---|---|
-|fast_ctr|0.76505|
-|fast_ctr_concat|0.765309|
-|fnn|0.765309|
-|pnn1|0.767347|
-|pnn2|0.769773|
-|pnn1_fixed|0.775139|
+|Model|Train Loss|Train AUC|Test AUC|
+|---|---|---|---|---|
+|IPNN|0.474942|0.770333|0.764046|
+|OPNN|0.466014|0.783711|0.771107|
+|FwFM|0.462722|0.794266|0.775696|
 
-### Fine Tune pnn1_fixed
 
-|Parameter| AUC|
-|---|---|
-|lr=0.001|0.773991|
-|lr=0.001, k=5|0.772792|
-|lr=0.001, k=20|0.774981|
-|lr=0.001, k=50|0.775141|
-|lr=0.001, gd|0.626260|
-|lr=0.001, drouput=0.5|0.632780|
-|lr=0.001, drouput=0.5, l2=0.5|0.622358|
 
 # Yahoo CTR Dataset
 
