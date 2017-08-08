@@ -728,6 +728,7 @@ class FwFM:
                 b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
             # Multiply SparseTensor X[i] by dense matrix w0[i]
             xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs)]
+            # xw = [x / tf.norm(x) for x in xw]
 
             with tf.device(gpu_device):
                 if has_field_bias:

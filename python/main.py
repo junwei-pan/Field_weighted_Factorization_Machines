@@ -15,8 +15,11 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #train_file = '../data_cretio/train.txt.100000.yx.0.7'
 #test_file = '../data_cretio/train.txt.100000.yx.0.3'
 #train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
-train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
-test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+#train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
+#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+train_file = '../data_yahoo/ctr_20170517_0530_0.015.txt.thres10.yx.100000'
+test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100000'
+
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
@@ -217,7 +220,6 @@ d_name_model['fwfm'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-<<<<<<< HEAD
 d_name_model['fwfm_k_5'] = FwFM(**{
         'layer_sizes': [field_sizes, 5, 1],
         'layer_acts': ['tanh', 'none'],
@@ -374,9 +376,6 @@ d_name_model['fwfm_k_200_lr_0.0001'] = FwFM(**{
     })
 '''
 d_name_model['fwfm_le'] = FwFM_LE(**{
-=======
-d_name_model['fwfm_onehot'] = FwFM_OneHot_Linear(**{
->>>>>>> Fwfm with one hot encoding linear part
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -384,17 +383,11 @@ d_name_model['fwfm_onehot'] = FwFM_OneHot_Linear(**{
         'learning_rate': 0.0005,
         'layer_l2': [0, 0],
         'kernel_l2': 0,
-<<<<<<< HEAD
         'random_seed': 0,
         'has_field_bias': False
     })
 '''
 d_name_model['fwfm_with_field_bias'] = FwFM(**{
-=======
-        'random_seed': 0
-    })
-d_name_model['fwfm_0.0005_without_field_bias'] = FwFM(**{
->>>>>>> Fwfm with one hot encoding linear part
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
