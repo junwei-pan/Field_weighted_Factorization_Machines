@@ -37,7 +37,7 @@ num_feas = len(utils.FIELD_SIZES)
 
 min_round = 1
 num_round = 1000
-early_stop_round = 2
+early_stop_round = 15
 batch_size = 2000
 
 field_sizes = utils.FIELD_SIZES
@@ -80,7 +80,7 @@ def train(model, name):
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
         path_model = 'model/' + str(name) + '_epoch_' + str(i)
         path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
-        #model.dump(path_model)
+        model.dump(path_model)
         d_label_score = {}
         d_label_score['label'] = test_data[1]
         d_label_score['score'] = test_preds
@@ -101,7 +101,6 @@ train_data = utils.split_data(train_data)
 test_data = utils.split_data(test_data)
 
 d_name_model = {}
-'''
 d_name_model['lr'] = LR(**{
         'input_dim': input_dim,
         'opt_algo': 'adam',
@@ -117,14 +116,6 @@ d_name_model['fm'] = FM(**{
         'l2_w': 0,
         'l2_v': 0,
     })
-d_name_model['lr_0.001'] = LR(**{
-        'input_dim': input_dim,
-        'opt_algo': 'adam',
-        'learning_rate': 0.001,
-        'l2_weight': 0,
-        'random_seed': 0
-    })
-'''
 d_name_model['fm_0.005'] = FM(**{
         'input_dim': input_dim,
         'factor_order': 10,
@@ -211,10 +202,120 @@ d_name_model['fast_ctr'] = Fast_CTR(**{
 '''
 d_name_model['fwfm'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
+        'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
         'opt_algo': 'adam',
         'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.001'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.005'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.01'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.01,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.05'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.05,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.0005'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.0001'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.00005'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.00005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.00001'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.00001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.000005'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.000005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_lr_0.000001'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.000001,
         'layer_l2': [0, 0],
         'kernel_l2': 0,
         'random_seed': 0,
@@ -299,6 +400,17 @@ d_name_model['fwfm_k_200'] = FwFM(**{
     })
 d_name_model['fwfm_k_5_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 5, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0001,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
+d_name_model['fwfm_k_10_lr_0.0001'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
         'opt_algo': 'adam',
@@ -420,7 +532,7 @@ d_name_model['fwfm_0.0005_without_field_bias_20'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_r_l2_0.005'] = FwFM(**{
+d_name_model['fwfm_r_l2_0.1'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -432,7 +544,22 @@ d_name_model['fwfm_r_l2_0.005'] = FwFM(**{
     'l2_dict': {
         'linear_w': 0.0,
         'v': 0.00,
-        'r': 0.005
+        'r': 0.1
+    }
+})
+d_name_model['fwfm_r_l2_0.01'] = FwFM(**{
+    'layer_sizes': [field_sizes, 10, 1],
+    'layer_acts': ['none', 'none'],
+    'layer_keeps': [1, 1],
+    'opt_algo': 'adam',
+    'learning_rate': 0.0005,
+    'layer_l2': [0, 0],
+    'kernel_l2': 0,
+    'random_seed': 0,
+    'l2_dict': {
+        'linear_w': 0.0,
+        'v': 0.00,
+        'r': 0.01
     }
 })
 d_name_model['fwfm_r_l2_0.001'] = FwFM(**{
@@ -450,21 +577,6 @@ d_name_model['fwfm_r_l2_0.001'] = FwFM(**{
         'r': 0.001
     }
 })
-d_name_model['fwfm_r_l2_0.0005'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['none', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.0005,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0,
-    'l2_dict': {
-        'linear_w': 0.0,
-        'v': 0.00,
-        'r': 0.0005
-    }
-})
 d_name_model['fwfm_r_l2_0.0001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
@@ -478,21 +590,6 @@ d_name_model['fwfm_r_l2_0.0001'] = FwFM(**{
         'linear_w': 0.0,
         'v': 0.00,
         'r': 0.0001
-    }
-})
-d_name_model['fwfm_r_l2_0.00005'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['none', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.0005,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0,
-    'l2_dict': {
-        'linear_w': 0.0,
-        'v': 0.00,
-        'r': 0.00005
     }
 })
 d_name_model['fwfm_r_l2_0.00001'] = FwFM(**{
@@ -510,12 +607,72 @@ d_name_model['fwfm_r_l2_0.00001'] = FwFM(**{
         'r': 0.00001
     }
 })
-d_name_model['fwfm_0.001_l2_v'] = FwFM(**{
+d_name_model['fwfm_r_l2_0.000001'] = FwFM(**{
+    'layer_sizes': [field_sizes, 10, 1],
+    'layer_acts': ['none', 'none'],
+    'layer_keeps': [1, 1],
+    'opt_algo': 'adam',
+    'learning_rate': 0.0005,
+    'layer_l2': [0, 0],
+    'kernel_l2': 0,
+    'random_seed': 0,
+    'l2_dict': {
+        'linear_w': 0.0,
+        'v': 0.00,
+        'r': 0.000001
+    }
+})
+d_name_model['fwfm_r_l2_0.0000001'] = FwFM(**{
+    'layer_sizes': [field_sizes, 10, 1],
+    'layer_acts': ['none', 'none'],
+    'layer_keeps': [1, 1],
+    'opt_algo': 'adam',
+    'learning_rate': 0.0005,
+    'layer_l2': [0, 0],
+    'kernel_l2': 0,
+    'random_seed': 0,
+    'l2_dict': {
+        'linear_w': 0.0,
+        'v': 0.00,
+        'r': 0.0000001
+    }
+})
+d_name_model['fwfm_v_l2_0.1'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['tanh', 'none'],
     'layer_keeps': [1, 1],
     'opt_algo': 'adam',
-    'learning_rate': 0.001,
+    'learning_rate': 0.0005,
+    'layer_l2': [0, 0],
+    'kernel_l2': 0,
+    'random_seed': 0,
+    'l2_dict': {
+        'linear_w': 0.0,
+        'v': 0.1,
+        'r': 0.0
+    }
+})
+d_name_model['fwfm_v_l2_0.01'] = FwFM(**{
+    'layer_sizes': [field_sizes, 10, 1],
+    'layer_acts': ['tanh', 'none'],
+    'layer_keeps': [1, 1],
+    'opt_algo': 'adam',
+    'learning_rate': 0.0005,
+    'layer_l2': [0, 0],
+    'kernel_l2': 0,
+    'random_seed': 0,
+    'l2_dict': {
+        'linear_w': 0.0,
+        'v': 0.01,
+        'r': 0.0
+    }
+})
+d_name_model['fwfm_v_l2_0.001'] = FwFM(**{
+    'layer_sizes': [field_sizes, 10, 1],
+    'layer_acts': ['tanh', 'none'],
+    'layer_keeps': [1, 1],
+    'opt_algo': 'adam',
+    'learning_rate': 0.0005,
     'layer_l2': [0, 0],
     'kernel_l2': 0,
     'random_seed': 0,
@@ -525,57 +682,27 @@ d_name_model['fwfm_0.001_l2_v'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_l2_v_0.0005_lr_0.002'] = FwFM(**{
+d_name_model['fwfm_v_l2_0.0001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['tanh', 'none'],
     'layer_keeps': [1, 1],
     'opt_algo': 'adam',
-    'learning_rate': 0.002,
+    'learning_rate': 0.0005,
     'layer_l2': [0, 0],
     'kernel_l2': 0,
     'random_seed': 0,
     'l2_dict': {
         'linear_w': 0.0,
-        'v': 0.0005,
+        'v': 0.0001,
         'r': 0.0
     }
 })
-d_name_model['fwfm_l2_0.00005_v_lr_0.002'] = FwFM(**{
+d_name_model['fwfm_v_l2_0.00001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['tanh', 'none'],
     'layer_keeps': [1, 1],
     'opt_algo': 'adam',
-    'learning_rate': 0.002,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0,
-    'l2_dict': {
-        'linear_w': 0.0,
-        'v': 0.00005,
-        'r': 0.0
-    }
-})
-d_name_model['fwfm_l2_0.00002_v_lr_0.002'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['tanh', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.002,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0,
-    'l2_dict': {
-        'linear_w': 0.0,
-        'v': 0.00002,
-        'r': 0.0
-    }
-})
-d_name_model['fwfm_l2_0.00001_v_lr_0.002'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['tanh', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.002,
+    'learning_rate': 0.0005,
     'layer_l2': [0, 0],
     'kernel_l2': 0,
     'random_seed': 0,
@@ -585,27 +712,12 @@ d_name_model['fwfm_l2_0.00001_v_lr_0.002'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_l2_0.000005_v_lr_0.002'] = FwFM(**{
+d_name_model['fwfm_v_l2_0.000001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['tanh', 'none'],
     'layer_keeps': [1, 1],
     'opt_algo': 'adam',
-    'learning_rate': 0.002,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0,
-    'l2_dict': {
-        'linear_w': 0.0,
-        'v': 0.000005,
-        'r': 0.0
-    }
-})
-d_name_model['fwfm_l2_0.000001_v_lr_0.002'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['tanh', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.002,
+    'learning_rate': 0.0005,
     'layer_l2': [0, 0],
     'kernel_l2': 0,
     'random_seed': 0,
@@ -615,27 +727,12 @@ d_name_model['fwfm_l2_0.000001_v_lr_0.002'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_l2_0.0000005_v_lr_0.002'] = FwFM(**{
+d_name_model['fwfm_v_l2_0.0000001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['tanh', 'none'],
     'layer_keeps': [1, 1],
     'opt_algo': 'adam',
-    'learning_rate': 0.002,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0,
-    'l2_dict': {
-        'linear_w': 0.0,
-        'v': 0.0000005,
-        'r': 0.0
-    }
-})
-d_name_model['fwfm_l2_0.0000001_v_lr_0.002'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['tanh', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.002,
+    'learning_rate': 0.0005,
     'layer_l2': [0, 0],
     'kernel_l2': 0,
     'random_seed': 0,
@@ -645,54 +742,9 @@ d_name_model['fwfm_l2_0.0000001_v_lr_0.002'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_l2_0.00000001_v_lr_0.002'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['tanh', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.002,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0,
-    'l2_dict': {
-        'linear_w': 0.0,
-        'v': 0.00000001,
-        'r': 0.0
-    }
-})
-d_name_model['fwfm_0.001_l2_r'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['tanh', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.001,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0,
-    'l2_dict': {
-        'linear_w': 0.0,
-        'v': 0.00,
-        'r': 0.001
-    }
-})
-d_name_model['fwfm_0.001_l2_vr'] = FwFM(**{
-    'layer_sizes': [field_sizes, 10, 1],
-    'layer_acts': ['tanh', 'none'],
-    'layer_keeps': [1, 1],
-    'opt_algo': 'adam',
-    'learning_rate': 0.001,
-    'layer_l2': [0, 0],
-    'kernel_l2': 0,
-    'random_seed': 0,
-    'l2_dict': {
-        'linear_w': 0.0,
-        'v': 0.001,
-        'r': 0.001
-    }
-})
 d_name_model['fwfm_gd'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
+        'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
         'opt_algo': 'gd',
         'learning_rate': 0.0005,
@@ -702,7 +754,7 @@ d_name_model['fwfm_gd'] = FwFM(**{
     })
 d_name_model['fwfm_momentum'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
+        'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
         'opt_algo': 'momentum',
         'learning_rate': 0.0005,
@@ -712,7 +764,7 @@ d_name_model['fwfm_momentum'] = FwFM(**{
     })
 d_name_model['fwfm_nesterov'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
+        'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
         'opt_algo': 'nesterov',
         'learning_rate': 0.0005,
@@ -722,7 +774,7 @@ d_name_model['fwfm_nesterov'] = FwFM(**{
     })
 d_name_model['fwfm_adagrad'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
+        'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
         'opt_algo': 'adagrad',
         'learning_rate': 0.0005,
@@ -732,9 +784,19 @@ d_name_model['fwfm_adagrad'] = FwFM(**{
     })
 d_name_model['fwfm_adadelta'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
-        'layer_acts': ['tanh', 'none'],
+        'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
         'opt_algo': 'adadelta',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0
+    })
+d_name_model['fwfm_adam'] = FwFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
         'learning_rate': 0.0005,
         'layer_l2': [0, 0],
         'kernel_l2': 0,
@@ -757,9 +819,16 @@ d_name_model['fwfm_adadelta'] = FwFM(**{
 #for name in ['fwfm_l2_0.000005_v_lr_0.002', 'fwfm_l2_0.000001_v_lr_0.002']:
 #for name in ['fwfm_l2_0.0000005_v_lr_0.002', 'fwfm_l2_0.0000001_v_lr_0.002', 'fwfm_l2_0.00000001_v_lr_0.002']:
 #for name in ['fwfm_k_5', 'fwfm_k_15', 'fwfm_k_20', 'fwfm_k_30', 'fwfm_k_50', 'fwfm_k_100', 'fwfm_k_200']:
-#for name in ['fwfm_gd', 'fwfm_momentum', 'fwfm_nestorov', 'fwfm_adagrad', 'fwfm_adadelta']:
 #for name in ['fwfm_k_5_lr_0.0001', 'fwfm_k_15_lr_0.0001', 'fwfm_k_20_lr_0.0001', 'fwfm_k_30_lr_0.0001', 'fwfm_k_50_lr_0.0001', 'fwfm_k_100_lr_0.0001', 'fwfm_k_200_lr_0.0001']:
-for name in ['fwfm_r_l2_0.005', 'fwfm_r_l2_0.001', 'fwfm_r_l2_0.0005', 'fwfm_r_l2_0.0001', 'fwfm_r_l2_0.00005', 'fwfm_r_l2_0.00001']:
+#for name in ['fwfm_r_l2_0.005', 'fwfm_r_l2_0.001', 'fwfm_r_l2_0.0005', 'fwfm_r_l2_0.0001', 'fwfm_r_l2_0.00005', 'fwfm_r_l2_0.00001']:
+#for name in ['fwfm_k_10_lr_0.0001']:
+#for name in ['lr', 'fm']:
+#for name in ['fwfm_gd', 'fwfm_momentum', 'fwfm_nestorov', 'fwfm_adagrad', 'fwfm_adadelta']:
+#for name in ['fwfm_lr_0.05', 'fwfm_lr_0.01', 'fwfm_lr_0.005', 'fwfm_lr_0.001', 'fwfm_lr_0.0005', 'fwfm_lr_0.0001', 'fwfm_lr_0.00005', 'fwfm_lr_0.00001', 'fwfm_lr_0.000005', 'fwfm_lr_0.000001']:
+#for name in ['fwfm_r_l2_0.1', 'fwfm_r_l2_0.01', 'fwfm_r_l2_0.001', 'fwfm_r_l2_0.0001', 'fwfm_r_l2_0.00001', 'fwfm_r_l2_0.000001', 'fwfm_r_l2_0.0000001', 'fwfm_v_l2_0.1', 'fwfm_v_l2_0.01', 'fwfm_v_l2_0.001', 'fwfm_v_l2_0.0001', 'fwfm_v_l2_0.00001', 'fwfm_v_l2_0.000001', 'fwfm_v_l2_0.0000001']:
+#for name in ['fwfm_v_l2_0.1', 'fwfm_v_l2_0.01', 'fwfm_v_l2_0.001', 'fwfm_v_l2_0.0001', 'fwfm_v_l2_0.00001', 'fwfm_v_l2_0.000001', 'fwfm_v_l2_0.0000001']:
+#for name in ['fwfm_v_l2_0.00001', 'fwfm_v_l2_0.000001', 'fwfm_v_l2_0.0000001']:
+for name in ['fwfm']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = d_name_model[name]
