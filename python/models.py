@@ -965,6 +965,133 @@ class FwFM_LE:
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
+class FFM:
+
+    def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None, init_path=None, opt_algo='gd', learning_rate=0.01, random_seed=None, has_field_bias=False, l1_dict=None, l2_dict=None):
+        """
+        # Arguments:
+            layer_size: [num_fields, factor_layer, l_p size]
+            layer_acts: ["tanh", "none"]
+            layer_keep: [1, 1]
+            layer_l2: [0, 0]
+            kernel_l2: 0
+        """
+        init_vars = []
+        num_inputs = len(layer_sizes[0])
+        factor_order = layer_sizes[1]
+        for i in range(num_inputs):
+            layer_input = layer_sizes[0][i]
+            layer_output = factor_order
+            init_vars.append(('w_l_v_all_%d' % i, [layer_input, 1], 'tnormal', dtype))
+            #init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
+            init_vars.append(('w0_%d' % i, [layer_input, (num_inputs-1)*layer_output], 'tnormal', dtype))
+
+        init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
+
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+            with tf.device(gpu_device):
+                if random_seed is not None:
+                    tf.set_random_seed(random_seed)
+                self.X = [ tf.sparse_placeholder(dtype) for i in range(num_inputs) ]
+                self.y = tf.placeholder(dtype)
+                self.vars = utils.init_var_map(init_vars, init_path)
+                w0 = [ self.vars['w0_%d' % i] for i in range(num_inputs) ]
+                w_l_v_all = [ self.vars['w_l_v_all_%d' % i] for i in range(num_inputs) ]
+            xw = [ tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs) ]
+            xw1 = [ tf.sparse_tensor_dense_matmul(self.X[i], w_l_v_all[i]) for i in range(num_inputs) ]
+            with tf.device(gpu_device):
+                xw1 = tf.reshape(xw1, [-1, num_inputs])
+                x = tf.concat([ xw[i] for i in range(num_inputs) ], 1)
+                l = tf.nn.dropout(utils.activate(x, layer_acts[0]), layer_keeps[0])
+                b1 = self.vars['b1']
+
+            index_left = []
+            index_right = []
+            for i in range(num_inputs):
+                for j in range(num_inputs):
+                    if i != j:
+                        if j > i:
+                            index_left.append(i*(num_inputs-1)+j-1)
+                        else:
+                            index_left.append(i*(num_inputs-1)+j)
+
+                        if j > i:
+                            index_right.append(j*(num_inputs-1)+i)
+                        else:
+                            index_right.append(j*(num_inputs-1)+i-1)
+
+            with tf.device(gpu_device):
+                l_trans = tf.transpose(tf.reshape(l, [-1, num_inputs*(num_inputs-1), factor_order]), [1, 0, 2])
+                l_left = tf.gather(l_trans, index_left)
+                l_right = tf.gather(l_trans, index_right)
+                p = tf.transpose(tf.multiply(l_left, l_right), [1, 0, 2])
+                p = tf.reduce_sum(p, 2)
+                print 'l_trans', l_trans.shape
+                print 'l_left', l_left.shape
+                print 'l_right', l_right.shape
+                print 'p', p.shape
+                p = tf.nn.dropout(utils.activate(tf.reshape(p, [-1, num_inputs * (num_inputs - 1)]), 'none'), layer_keeps[1])
+                l = utils.activate(tf.reduce_sum(xw1, 1, keep_dims=True) + b1 + tf.reduce_sum(p, 1, keep_dims=True), layer_acts[1])
+
+                self.y_prob = tf.sigmoid(l)
+                self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))
+                if l2_dict is not None:
+                    if l2_dict.has_key('linear_w'):
+                        self.loss += l2_dict['linear_w'] * tf.nn.l2_loss(w_l_v)
+                    if l2_dict.has_key('r'):
+                        self.loss += l2_dict['r'] * tf.nn.l2_loss(w_p)
+                    if l2_dict.has_key('v'):
+                        for i in range(num_inputs):
+                            self.loss += l2_dict['v'] * tf.nn.l2_loss(self.vars['w0_%d' % i])
+
+                if l1_dict is not None:
+                    if l1_dict.has_key('linear_w'):
+                        l1_regularizer = tf.contrib.layers.l1_regularizer(
+                            scale=l1_dict['linear_w'], scope=None
+                        )
+                        penalty = tf.contrib.layers.apply_regularization(l1_regularizer, [xw1])
+                        self.loss += penalty
+                    if l1_dict.has_key('r'):
+                        l1_regularizer = tf.contrib.layers.l1_regularizer(
+                            scale=l1_dict['r'], scope=None
+                        )
+                        penalty = tf.contrib.layers.apply_regularization(l1_regularizer, [w_p])
+                        #penalty = utils.l1_loss(w_p, l1_dict['r'])
+                        self.loss += penalty
+                    if l1_dict.has_key('v'):
+                        l1_regularizer = tf.contrib.layers.l1_regularizer(
+                            scale=l1_dict['v'], scope=None
+                        )
+                        for i in range(num_inputs):
+                            penalty += tf.contrib.layers.apply_regularization(l1_regularizer, [self.vars['w0_%d' % i]])
+                        self.loss += penalty
+
+                self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+            config.gpu_options.allow_growth = True
+            config.log_device_placement = True
+            self.sess = tf.Session(config=config)
+            with tf.device(gpu_device):
+                tf.global_variables_initializer().run(session=self.sess)
+
+    def run(self, fetches, X=None, y=None):
+        feed_dict = {}
+        for i in range(len(X)):
+            feed_dict[self.X[i]] = X[i]
+
+        if y is not None:
+            feed_dict[self.y] = y
+        return self.sess.run(fetches, feed_dict)
+
+    def dump(self, model_path):
+        var_map = {}
+        for name, var in self.vars.iteritems():
+            var_map[name] = self.sess.run(var)
+
+        pkl.dump(var_map, open(model_path, 'wb'))
+        print 'model dumped at', model_path
+
 class PNN2:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None):
