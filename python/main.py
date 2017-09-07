@@ -15,8 +15,9 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #train_file = '../data_cretio/train.txt.100000.yx.0.7'
 #test_file = '../data_cretio/train.txt.100000.yx.0.3'
 #train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
-train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
-test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.1000'
+#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx.1000'
 #train_file = '../data_yahoo/ctr_20170517_0530_0.015.txt.thres10.yx.100000'
 #test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100000'
 

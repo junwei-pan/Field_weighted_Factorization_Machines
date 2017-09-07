@@ -119,7 +119,7 @@ class statis:
             fea_i, fea_j = map(int, feature_pair.split('_'))
             dot = self.get_feature_dot_product(fea_i, fea_j)
             sum += dot * cnt * r
-            sum_abs += abs(dot) * cnt * r
+            sum_abs += abs(dot * r) * cnt 
             sum_cnt += cnt
             uniq_fea_pair_cnt += 1
         return sum, sum_abs, sum_cnt, uniq_fea_pair_cnt
