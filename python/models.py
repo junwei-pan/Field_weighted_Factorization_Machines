@@ -802,9 +802,9 @@ class FwFM:
 
                 self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
 
-            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
             config.gpu_options.allow_growth = True
-            config.log_device_placement=True
+            config.log_device_placement=False
             self.sess = tf.Session(config=config)
             with tf.device(gpu_device):
                 tf.global_variables_initializer().run(session=self.sess)
@@ -943,9 +943,9 @@ class FwFM_LE:
 
                 self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
 
-            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=T)
             config.gpu_options.allow_growth = True
-            config.log_device_placement=True
+            config.log_device_placement=False
             self.sess = tf.Session(config=config)
             with tf.device(gpu_device):
                 tf.global_variables_initializer().run(session=self.sess)
@@ -1068,7 +1068,7 @@ class FFM:
                         self.loss += penalty
 
                 self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
-            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
             config.gpu_options.allow_growth = True
             config.log_device_placement = True
             self.sess = tf.Session(config=config)

@@ -8,16 +8,16 @@ from time import gmtime, strftime
 import pickle as pkl
 
 import utils
-from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM#, FwFM_LE
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM#, FwFM_LE
 
 #train_file = '../data_cretio/train.txt.thres20.yx.0.7'
 #test_file = '../data_cretio/train.txt.thres20.yx.0.3'
 #train_file = '../data_cretio/train.txt.100000.yx.0.7'
 #test_file = '../data_cretio/train.txt.100000.yx.0.3'
 #train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
-train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.1000'
-#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
-test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx.1000'
+train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm2.8.yx'
+test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm2.8.yx'
+#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx.1000'
 #train_file = '../data_yahoo/ctr_20170517_0530_0.015.txt.thres10.yx.100000'
 #test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100000'
 
@@ -81,7 +81,7 @@ def train(model, name):
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
         path_model = 'model/' + str(name) + '_epoch_' + str(i)
         path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
-        model.dump(path_model)
+        #model.dump(path_model)
         d_label_score = {}
         d_label_score['label'] = test_data[1]
         d_label_score['score'] = test_preds
@@ -893,6 +893,17 @@ d_name_model['fwfm_adam'] = FwFM(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
+d_name_model['ffm'] = FFM(**{
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'has_field_bias': False
+    })
 #for name in d_name_model.keys():
 #for name in ['fast_ctr_concat', 'fnn']:
 #for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd']:
@@ -921,7 +932,7 @@ d_name_model['fwfm_adam'] = FwFM(**{
 #for name in ['fwfm']:
 #for name in ['fwfm_v_l2_0.1', 'fwfm_v_l2_0.01', 'fwfm_v_l2_0.001', 'fwfm_v_l2_0.0001', 'fwfm_v_l2_0.00001', 'fwfm_v_l2_0.000001', 'fwfm_v_l2_0.0000001']:
 #for name in ['fwfm_w_l2_0.1', 'fwfm_w_l2_0.01', 'fwfm_w_l2_0.001', 'fwfm_w_l2_0.0001', 'fwfm_w_l2_0.00001', 'fwfm_w_l2_0.000001']:
-for name in ['fwfm']:
+for name in ['ffm']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = d_name_model[name]
