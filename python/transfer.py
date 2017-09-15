@@ -30,14 +30,13 @@ d_fea_index = {}
 d_field_fea_cnt = {}
 #path_train = '/tmp/jwpan/data_cretio/train.txt'
 ##path_train = '../data_yahoo/ctr_20170524_0530_0.003.txt'
-path_train = '../data_yahoo/ctr_20170517_0530_0.015.txt'
+path_train = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt'
 #path_train = '../data_cretio/train.txt'
-path_test = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
+path_test = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1'
 #path_test = '../data_yahoo/ctr_20170601.txt.downsample_all.0.1'
 #path_fea_index = '../data_yahoo/featindex_3m_thres' + str(thres) + '.txt'
 #path_fea_index = '../data_yahoo/featindex_25m_thres' + str(thres) + '.txt'
 #path_fea_index = '../data_cretio/featindex_thres20.txt'
-path_fea_ffm_index = '../data_yahoo/featindex_ffm2.8_thres20.txt'
 batch = 100000
 
 def get_lines_of_file(path):
@@ -88,12 +87,12 @@ def create_fea_index(path):
     print "number of features appears <= %d times: %d" % (thres, cnt_filter)
     file.close()
 
-def create_ffm_fea_index(path, d=14):
+def create_ffm_fea_index(path, d=14, k=2):
     '''
     In order to compare FFM with FwFM using the same size of parameters and hence memory, we need to use
     hashing trick with a small hashing space.
     '''
-    d = 14.0 / 5
+    d = 14.0 / (10.0 / k)
     cnt_fea_before_hash = 0
     cnt_fea_after_hash = 0
     index = 0
@@ -135,16 +134,17 @@ def create_ffm_fea_index(path, d=14):
     print "cnt_fea_after_hash: %d" % cnt_fea_after_hash
     file.close()
 
-def create_yx(path, mode, model='fm'):
+def create_yx(path, mode, model='fm', d=14, k=2):
     '''
     There is some samples whose all features are rare(# < thres), 
     we need to filter all these samples, use cnt_filter as the counter.
     '''
+    suffix = str(round(d / (10.0 / k)), 2)
     cnt_qualify = 0
     cnt_filter = 0
     total = get_lines_of_file(path)
     if model == 'ffm':
-        file = open(path + '.thres' + str(thres) + '.ffm2.8.yx', 'w')
+        file = open(path + '.thres' + str(thres) + '.ffm' + suffix + '.yx', 'w')
     else:
         file = open(path + '.thres' + str(thres) + '.yx', 'w')
     for i, line in enumerate(open(path)):
@@ -180,14 +180,19 @@ def create_yx(path, mode, model='fm'):
     print "number of samples with all rare features: ", cnt_filter
     file.close()
 
-print 'build field feature'
-build_field_feature(path_train, 'train')
+d=14
+for k in range(1, 10):
+    suffix = str(round(d/(10.0/k)), 2)
+    path_fea_ffm_index = '../data_yahoo/featindex_ffm'+ suffix +'_thres20.txt'
 
-print 'create fea index'
-#create_fea_index(path_fea_index)
-create_ffm_fea_index(path_fea_ffm_index, 15)
+    print 'build field feature'
+    build_field_feature(path_train, 'train')
 
-print 'create yx'
-#create_yx(path_train, 'train')
-create_yx(path_train, 'train', 'ffm')
-create_yx(path_test, 'train', 'ffm')
+    print 'create fea index'
+    #create_fea_index(path_fea_index)
+    create_ffm_fea_index(path_fea_ffm_index, d, k)
+
+    print 'create yx'
+    #create_yx(path_train, 'train')
+    create_yx(path_train, 'train', 'ffm', d, k)
+    create_yx(path_test, 'train', 'ffm', d, k)
