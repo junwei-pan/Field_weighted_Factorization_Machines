@@ -1027,10 +1027,6 @@ class FFM:
                 l_right = tf.gather(l_trans, index_right)
                 p = tf.transpose(tf.multiply(l_left, l_right), [1, 0, 2])
                 p = tf.reduce_sum(p, 2)
-                print 'l_trans', l_trans.shape
-                print 'l_left', l_left.shape
-                print 'l_right', l_right.shape
-                print 'p', p.shape
                 p = tf.nn.dropout(utils.activate(tf.reshape(p, [-1, num_inputs * (num_inputs - 1)]), 'none'), layer_keeps[1])
                 l = utils.activate(tf.reduce_sum(xw1, 1, keep_dims=True) + b1 + tf.reduce_sum(p, 1, keep_dims=True), layer_acts[1])
 
@@ -1070,7 +1066,7 @@ class FFM:
                 self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
             config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
             config.gpu_options.allow_growth = True
-            config.log_device_placement = True
+            config.log_device_placement = False
             self.sess = tf.Session(config=config)
             with tf.device(gpu_device):
                 tf.global_variables_initializer().run(session=self.sess)

@@ -2,6 +2,7 @@ import cPickle as pkl
 
 import numpy as np
 import tensorflow as tf
+from itertools import islice
 from scipy.sparse import coo_matrix
 
 DTYPE = tf.float64
@@ -25,6 +26,19 @@ MINVAL = -1e-2
 MAXVAL = 1e-2
 
 
+def process_lines(lines):
+    X = []
+    y = []
+    for line in lines:
+        fields = line.strip().split()
+        y_i = int(fields[0])
+        X_i = map(lambda x: int(x.split(':')[0]), fields[1:])
+        y.append(y_i)
+        X.append(X_i)
+    y = np.reshape(np.array(y), (-1, 1))
+    X = libsvm_2_coo(X, (len(X), INPUT_DIM)).tocsr()
+    return split_data([X, y])
+
 def read_data(file_name):
     X = []
     y = []
@@ -38,6 +52,17 @@ def read_data(file_name):
     y = np.reshape(np.array(y), (-1, 1))
     X = libsvm_2_coo(X, (len(X), INPUT_DIM)).tocsr()
     return X, y
+
+def read_label(file_name):
+    y = []
+    with open(file_name) as fin:
+        for line in fin:
+            fields = line.strip().split()
+            y_i = int(fields[0])
+            y.append(y_i)
+    y = np.reshape(np.array(y), (-1, 1))
+    return y
+    
 
 
 def shuffle(data):

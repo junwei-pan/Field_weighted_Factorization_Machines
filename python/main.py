@@ -6,6 +6,7 @@ import sys
 import tensorflow as tf
 from time import gmtime, strftime
 import pickle as pkl
+from itertools import islice
 
 import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM#, FwFM_LE
@@ -28,13 +29,18 @@ sys.stdout.flush()
 
 input_dim = utils.INPUT_DIM
 
+"""
 with tf.device('/gpu:0'):
     #tensorflow_dataset = tf.constant(numpy_dataset)
     train_data = tf.constant(utils.read_data(train_file))
     test_data = tf.constant(utils.read_data(test_file))
+"""
 
-train_size = train_data[0].shape[0]
-test_size = test_data[0].shape[0]
+train_label = utils.read_label(train_file)
+test_label = utils.read_label(test_file)
+
+train_size = train_label.shape[0]
+test_size = test_label.shape[0]
 num_feas = len(utils.FIELD_SIZES)
 
 min_round = 1
@@ -54,37 +60,64 @@ def train(model, name):
         fetches = [model.optimizer, model.loss]
         if batch_size > 0:
             ls = []
-            for j in range(train_size / batch_size + 1):
-                X_i, y_i = utils.slice(train_data, j * batch_size, batch_size)
+            f = open(train_file, 'r')
+            while True:
+                lines_gen = list(islice(f, batch_size))
+                if not lines_gen:
+                    break
+                X_i, y_i = utils.slice(utils.process_lines(lines_gen), 0, -1)
                 _, l = model.run(fetches, X_i, y_i)
                 ls.append(l)
         elif batch_size == -1:
+            pass
+            """
             X_i, y_i = utils.slice(train_data)
             _, l = model.run(fetches, X_i, y_i)
             ls = [l]
+            """
         lst_train_pred = []
         lst_test_pred = []
         if batch_size > 0:
+            f = open(train_file, 'r')
+            while True:
+                lines_gen = list(islice(f, batch_size))
+                if not lines_gen:
+                    break
+                X_i, y_i = utils.slice(utils.process_lines(lines_gen), 0, -1)
+                _train_preds = model.run(model.y_prob, X_i)
+                lst_train_pred.append(_train_preds)
+            """
             for j in range(train_size / batch_size + 1):
                 X_i, y_i = utils.slice(train_data, j * batch_size, batch_size)
                 #X_i = utils.libsvm_2_coo(X_i, (len(X_i), input_dim)).tocsr()
                 _train_preds = model.run(model.y_prob, X_i)
                 lst_train_pred.append(_train_preds)
+            """
+            f = open(test_file, 'r')
+            while True:
+                lines_gen = list(islice(f, batch_size))
+                if not lines_gen:
+                    break
+                X_i, y_i = utils.slice(utils.process_lines(lines_gen), 0, -1)
+                _test_preds = model.run(model.y_prob, X_i)
+                lst_test_pred.append(_test_preds)
+            """
             for j in range(test_size / batch_size + 1):
                 X_i, y_i = utils.slice(test_data, j * batch_size, batch_size)
                 #X_i = utils.libsvm_2_coo(X_i, (len(X_i), input_dim)).tocsr()
                 _test_preds = model.run(model.y_prob, X_i)
                 lst_test_pred.append(_test_preds)
+            """
         train_preds = np.concatenate(lst_train_pred)
         test_preds = np.concatenate(lst_test_pred)
-        train_score = roc_auc_score(train_data[1], train_preds)
-        test_score = roc_auc_score(test_data[1], test_preds)
+        train_score = roc_auc_score(train_label, train_preds)
+        test_score = roc_auc_score(test_label, test_preds)
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
         path_model = 'model/' + str(name) + '_epoch_' + str(i)
         path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
         #model.dump(path_model)
         d_label_score = {}
-        d_label_score['label'] = test_data[1]
+        d_label_score['label'] = test_label
         d_label_score['score'] = test_preds
         #pkl.dump(d_label_score, open(path_label_score, 'wb'))
         sys.stdout.flush()
@@ -99,10 +132,12 @@ def train(model, name):
                 sys.stdout.flush()
                 break
 
-train_data = utils.split_data(train_data)
-test_data = utils.split_data(test_data)
+#train_data = utils.split_data(train_data)
+#test_data = utils.split_data(test_data)
 
 d_name_model = {}
+
+'''
 d_name_model['lr'] = LR(**{
         'input_dim': input_dim,
         'opt_algo': 'adam',
@@ -126,7 +161,6 @@ d_name_model['fm_0.005'] = FM(**{
         'l2_w': 0,
         'l2_v': 0,
     })
-'''
 d_name_model['fnn'] = FNN(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -136,7 +170,6 @@ d_name_model['fnn'] = FNN(**{
         'layer_l2': [0, 0],
         'random_seed': 0
     })
-'''
 d_name_model['pnn1'] = PNN1(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -147,7 +180,6 @@ d_name_model['pnn1'] = PNN1(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-'''
 d_name_model['pnn1_fixed'] = PNN1_Fixed(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -169,7 +201,6 @@ d_name_model['pnn1_fixed_0.0005_no_field_bias'] = PNN1_Fixed(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-'''
 d_name_model['pnn2'] = PNN2(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -180,7 +211,6 @@ d_name_model['pnn2'] = PNN2(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-'''
 d_name_model['fast_ctr_concat'] =  Fast_CTR_Concat(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -201,7 +231,6 @@ d_name_model['fast_ctr'] = Fast_CTR(**{
         'kernel_l2': 0,
         'random_seed': 0
 })
-'''
 d_name_model['fwfm'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
@@ -488,7 +517,6 @@ d_name_model['fwfm_k_200_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-'''
 d_name_model['fwfm_le'] = FwFM_LE(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -500,7 +528,6 @@ d_name_model['fwfm_le'] = FwFM_LE(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-'''
 d_name_model['fwfm_with_field_bias'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
@@ -894,6 +921,7 @@ d_name_model['fwfm_adam'] = FwFM(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
+'''
 d_name_model['ffm'] = FFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
