@@ -16,8 +16,8 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #train_file = '../data_cretio/train.txt.100000.yx.0.7'
 #test_file = '../data_cretio/train.txt.100000.yx.0.3'
 #train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
-train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm8.4.yx.100000'
-test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm8.4.yx.100000'
+train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm12.6.yx'
+test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx.1000'
 #train_file = '../data_yahoo/ctr_20170517_0530_0.015.txt.thres10.yx.100000'
 #test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100000'
@@ -47,6 +47,7 @@ min_round = 1
 num_round = 1000
 early_stop_round = 15
 batch_size = 2000
+bb = 100
 
 field_sizes = utils.FIELD_SIZES
 field_offsets = utils.FIELD_OFFSETS
@@ -62,12 +63,13 @@ def train(model, name):
             ls = []
             f = open(train_file, 'r')
             while True:
-                lines_gen = list(islice(f, batch_size))
+                lines_gen = list(islice(f, batch_size * bb))
                 if not lines_gen:
                     break
-                X_i, y_i = utils.slice(utils.process_lines(lines_gen), 0, -1)
-                _, l = model.run(fetches, X_i, y_i)
-                ls.append(l)
+                for ib in range(bb):
+                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)]), 0, -1)
+                    _, l = model.run(fetches, X_i, y_i)
+                    ls.append(l)
         elif batch_size == -1:
             pass
             """
@@ -80,12 +82,13 @@ def train(model, name):
         if batch_size > 0:
             f = open(train_file, 'r')
             while True:
-                lines_gen = list(islice(f, batch_size))
+                lines_gen = list(islice(f, batch_size * bb))
                 if not lines_gen:
                     break
-                X_i, y_i = utils.slice(utils.process_lines(lines_gen), 0, -1)
-                _train_preds = model.run(model.y_prob, X_i)
-                lst_train_pred.append(_train_preds)
+                for ib in range(bb):
+                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)]), 0, -1)
+                    _train_preds = model.run(model.y_prob, X_i)
+                    lst_train_pred.append(_train_preds)
             """
             for j in range(train_size / batch_size + 1):
                 X_i, y_i = utils.slice(train_data, j * batch_size, batch_size)
@@ -95,12 +98,13 @@ def train(model, name):
             """
             f = open(test_file, 'r')
             while True:
-                lines_gen = list(islice(f, batch_size))
+                lines_gen = list(islice(f, batch_size * bb))
                 if not lines_gen:
                     break
-                X_i, y_i = utils.slice(utils.process_lines(lines_gen), 0, -1)
-                _test_preds = model.run(model.y_prob, X_i)
-                lst_test_pred.append(_test_preds)
+                for ib in range(bb):
+                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)]), 0, -1)
+                    _test_preds = model.run(model.y_prob, X_i)
+                    lst_test_pred.append(_test_preds)
             """
             for j in range(test_size / batch_size + 1):
                 X_i, y_i = utils.slice(test_data, j * batch_size, batch_size)
