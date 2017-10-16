@@ -15,9 +15,10 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #test_file = '../data_cretio/train.txt.thres20.yx.0.3'
 #train_file = '../data_cretio/train.txt.100000.yx.0.7'
 #test_file = '../data_cretio/train.txt.100000.yx.0.3'
-#train_file = '../data_yahoo/ctr_20170524_0530_0.003.txt.thres10.yx'
-train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm12.6.yx'
-test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
+train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt'
+test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+#train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm12.6.yx'
+#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx.1000'
 #train_file = '../data_yahoo/ctr_20170517_0530_0.015.txt.thres10.yx.100000'
 #test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100000'
@@ -47,7 +48,7 @@ min_round = 1
 num_round = 1000
 early_stop_round = 15
 batch_size = 2000
-bb = 100
+bb = 1
 
 field_sizes = utils.FIELD_SIZES
 field_offsets = utils.FIELD_OFFSETS
@@ -139,17 +140,17 @@ def train(model, name):
 #train_data = utils.split_data(train_data)
 #test_data = utils.split_data(test_data)
 
-d_name_model = {}
+d_name_conf = {}
 
 '''
-d_name_model['lr'] = LR(**{
+d_name_conf['lr'] = LR(**{
         'input_dim': input_dim,
         'opt_algo': 'adam',
         'learning_rate': 0.0001,
         'l2_weight': 0,
         'random_seed': 0
     })
-d_name_model['fm'] = FM(**{
+d_name_conf['fm'] = FM(**{
         'input_dim': input_dim,
         'factor_order': 10,
         'opt_algo': 'adam',
@@ -157,7 +158,7 @@ d_name_model['fm'] = FM(**{
         'l2_w': 0,
         'l2_v': 0,
     })
-d_name_model['fm_0.005'] = FM(**{
+d_name_conf['fm_0.005'] = FM(**{
         'input_dim': input_dim,
         'factor_order': 10,
         'opt_algo': 'adam',
@@ -165,7 +166,7 @@ d_name_model['fm_0.005'] = FM(**{
         'l2_w': 0,
         'l2_v': 0,
     })
-d_name_model['fnn'] = FNN(**{
+d_name_conf['fnn'] = FNN(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -174,7 +175,7 @@ d_name_model['fnn'] = FNN(**{
         'layer_l2': [0, 0],
         'random_seed': 0
     })
-d_name_model['pnn1'] = PNN1(**{
+d_name_conf['pnn1'] = PNN1(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -184,7 +185,7 @@ d_name_model['pnn1'] = PNN1(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['pnn1_fixed'] = PNN1_Fixed(**{
+d_name_conf['pnn1_fixed'] = PNN1_Fixed(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -194,7 +195,7 @@ d_name_model['pnn1_fixed'] = PNN1_Fixed(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['pnn1_fixed_0.0005_no_field_bias'] = PNN1_Fixed(**{
+d_name_conf['pnn1_fixed_0.0005_no_field_bias'] = PNN1_Fixed(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -205,7 +206,7 @@ d_name_model['pnn1_fixed_0.0005_no_field_bias'] = PNN1_Fixed(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['pnn2'] = PNN2(**{
+d_name_conf['pnn2'] = PNN2(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -215,7 +216,7 @@ d_name_model['pnn2'] = PNN2(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['fast_ctr_concat'] =  Fast_CTR_Concat(**{
+d_name_conf['fast_ctr_concat'] =  Fast_CTR_Concat(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -225,7 +226,7 @@ d_name_model['fast_ctr_concat'] =  Fast_CTR_Concat(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['fast_ctr'] = Fast_CTR(**{
+d_name_conf['fast_ctr'] = Fast_CTR(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -235,7 +236,7 @@ d_name_model['fast_ctr'] = Fast_CTR(**{
         'kernel_l2': 0,
         'random_seed': 0
 })
-d_name_model['fwfm'] = FwFM(**{
+d_name_conf['fwfm'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -246,7 +247,7 @@ d_name_model['fwfm'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.001'] = FwFM(**{
+d_name_conf['fwfm_lr_0.001'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -257,7 +258,7 @@ d_name_model['fwfm_lr_0.001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.005'] = FwFM(**{
+d_name_conf['fwfm_lr_0.005'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -268,7 +269,7 @@ d_name_model['fwfm_lr_0.005'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.01'] = FwFM(**{
+d_name_conf['fwfm_lr_0.01'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -279,7 +280,7 @@ d_name_model['fwfm_lr_0.01'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.05'] = FwFM(**{
+d_name_conf['fwfm_lr_0.05'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -290,7 +291,7 @@ d_name_model['fwfm_lr_0.05'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.0005'] = FwFM(**{
+d_name_conf['fwfm_lr_0.0005'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -301,7 +302,7 @@ d_name_model['fwfm_lr_0.0005'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.0001'] = FwFM(**{
+d_name_conf['fwfm_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -312,7 +313,7 @@ d_name_model['fwfm_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.00005'] = FwFM(**{
+d_name_conf['fwfm_lr_0.00005'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -323,7 +324,7 @@ d_name_model['fwfm_lr_0.00005'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.00001'] = FwFM(**{
+d_name_conf['fwfm_lr_0.00001'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -334,7 +335,7 @@ d_name_model['fwfm_lr_0.00001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.000005'] = FwFM(**{
+d_name_conf['fwfm_lr_0.000005'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -345,7 +346,7 @@ d_name_model['fwfm_lr_0.000005'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_lr_0.000001'] = FwFM(**{
+d_name_conf['fwfm_lr_0.000001'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -356,7 +357,7 @@ d_name_model['fwfm_lr_0.000001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_5'] = FwFM(**{
+d_name_conf['fwfm_k_5'] = FwFM(**{
         'layer_sizes': [field_sizes, 5, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -367,7 +368,7 @@ d_name_model['fwfm_k_5'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_15'] = FwFM(**{
+d_name_conf['fwfm_k_15'] = FwFM(**{
         'layer_sizes': [field_sizes, 15, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -378,7 +379,7 @@ d_name_model['fwfm_k_15'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_20'] = FwFM(**{
+d_name_conf['fwfm_k_20'] = FwFM(**{
         'layer_sizes': [field_sizes, 20, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -389,7 +390,7 @@ d_name_model['fwfm_k_20'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_30'] = FwFM(**{
+d_name_conf['fwfm_k_30'] = FwFM(**{
         'layer_sizes': [field_sizes, 30, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -400,7 +401,7 @@ d_name_model['fwfm_k_30'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_50'] = FwFM(**{
+d_name_conf['fwfm_k_50'] = FwFM(**{
         'layer_sizes': [field_sizes, 50, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -411,7 +412,7 @@ d_name_model['fwfm_k_50'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_100'] = FwFM(**{
+d_name_conf['fwfm_k_100'] = FwFM(**{
         'layer_sizes': [field_sizes, 100, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -422,7 +423,7 @@ d_name_model['fwfm_k_100'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_200'] = FwFM(**{
+d_name_conf['fwfm_k_200'] = FwFM(**{
         'layer_sizes': [field_sizes, 200, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -433,7 +434,7 @@ d_name_model['fwfm_k_200'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_5_lr_0.0001'] = FwFM(**{
+d_name_conf['fwfm_k_5_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 5, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -444,7 +445,7 @@ d_name_model['fwfm_k_5_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_10_lr_0.0001'] = FwFM(**{
+d_name_conf['fwfm_k_10_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -455,7 +456,7 @@ d_name_model['fwfm_k_10_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_15_lr_0.0001'] = FwFM(**{
+d_name_conf['fwfm_k_15_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 15, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -466,7 +467,7 @@ d_name_model['fwfm_k_15_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_20_lr_0.0001'] = FwFM(**{
+d_name_conf['fwfm_k_20_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 20, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -477,7 +478,7 @@ d_name_model['fwfm_k_20_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_30_lr_0.0001'] = FwFM(**{
+d_name_conf['fwfm_k_30_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 30, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -488,7 +489,7 @@ d_name_model['fwfm_k_30_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_50_lr_0.0001'] = FwFM(**{
+d_name_conf['fwfm_k_50_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 50, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -499,7 +500,7 @@ d_name_model['fwfm_k_50_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_100_lr_0.0001'] = FwFM(**{
+d_name_conf['fwfm_k_100_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 100, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -510,7 +511,7 @@ d_name_model['fwfm_k_100_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_k_200_lr_0.0001'] = FwFM(**{
+d_name_conf['fwfm_k_200_lr_0.0001'] = FwFM(**{
         'layer_sizes': [field_sizes, 200, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -521,7 +522,7 @@ d_name_model['fwfm_k_200_lr_0.0001'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_le'] = FwFM_LE(**{
+d_name_conf['fwfm_le'] = FwFM_LE(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -532,7 +533,7 @@ d_name_model['fwfm_le'] = FwFM_LE(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_with_field_bias'] = FwFM(**{
+d_name_conf['fwfm_with_field_bias'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -543,7 +544,7 @@ d_name_model['fwfm_with_field_bias'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': True
     })
-d_name_model['fwfm_0.0001_without_field_bias'] = FwFM(**{
+d_name_conf['fwfm_0.0001_without_field_bias'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -554,7 +555,7 @@ d_name_model['fwfm_0.0001_without_field_bias'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_0.0005_without_field_bias_20'] = FwFM(**{
+d_name_conf['fwfm_0.0005_without_field_bias_20'] = FwFM(**{
         'layer_sizes': [field_sizes, 20, 1],
         'layer_acts': ['tanh', 'none'],
         'layer_keeps': [1, 1],
@@ -565,7 +566,7 @@ d_name_model['fwfm_0.0005_without_field_bias_20'] = FwFM(**{
         'random_seed': 0,
         'has_field_bias': False
     })
-d_name_model['fwfm_r_l2_0.1'] = FwFM(**{
+d_name_conf['fwfm_r_l2_0.1'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -580,7 +581,7 @@ d_name_model['fwfm_r_l2_0.1'] = FwFM(**{
         'r': 0.1
     }
 })
-d_name_model['fwfm_r_l2_0.01'] = FwFM(**{
+d_name_conf['fwfm_r_l2_0.01'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -595,7 +596,7 @@ d_name_model['fwfm_r_l2_0.01'] = FwFM(**{
         'r': 0.01
     }
 })
-d_name_model['fwfm_r_l2_0.001'] = FwFM(**{
+d_name_conf['fwfm_r_l2_0.001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -610,7 +611,7 @@ d_name_model['fwfm_r_l2_0.001'] = FwFM(**{
         'r': 0.001
     }
 })
-d_name_model['fwfm_r_l2_0.0001'] = FwFM(**{
+d_name_conf['fwfm_r_l2_0.0001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -625,7 +626,7 @@ d_name_model['fwfm_r_l2_0.0001'] = FwFM(**{
         'r': 0.0001
     }
 })
-d_name_model['fwfm_r_l2_0.00001'] = FwFM(**{
+d_name_conf['fwfm_r_l2_0.00001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -640,7 +641,7 @@ d_name_model['fwfm_r_l2_0.00001'] = FwFM(**{
         'r': 0.00001
     }
 })
-d_name_model['fwfm_r_l2_0.000001'] = FwFM(**{
+d_name_conf['fwfm_r_l2_0.000001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -655,7 +656,7 @@ d_name_model['fwfm_r_l2_0.000001'] = FwFM(**{
         'r': 0.000001
     }
 })
-d_name_model['fwfm_r_l2_0.0000001'] = FwFM(**{
+d_name_conf['fwfm_r_l2_0.0000001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -670,7 +671,7 @@ d_name_model['fwfm_r_l2_0.0000001'] = FwFM(**{
         'r': 0.0000001
     }
 })
-d_name_model['fwfm_v_l2_0.1'] = FwFM(**{
+d_name_conf['fwfm_v_l2_0.1'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -685,7 +686,7 @@ d_name_model['fwfm_v_l2_0.1'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_v_l2_0.01'] = FwFM(**{
+d_name_conf['fwfm_v_l2_0.01'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -700,7 +701,7 @@ d_name_model['fwfm_v_l2_0.01'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_v_l2_0.001'] = FwFM(**{
+d_name_conf['fwfm_v_l2_0.001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -715,7 +716,7 @@ d_name_model['fwfm_v_l2_0.001'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_v_l2_0.0001'] = FwFM(**{
+d_name_conf['fwfm_v_l2_0.0001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -730,7 +731,7 @@ d_name_model['fwfm_v_l2_0.0001'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_v_l2_0.00001'] = FwFM(**{
+d_name_conf['fwfm_v_l2_0.00001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -745,7 +746,7 @@ d_name_model['fwfm_v_l2_0.00001'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_v_l2_0.000001'] = FwFM(**{
+d_name_conf['fwfm_v_l2_0.000001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -760,7 +761,7 @@ d_name_model['fwfm_v_l2_0.000001'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_v_l2_0.0000001'] = FwFM(**{
+d_name_conf['fwfm_v_l2_0.0000001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -775,7 +776,7 @@ d_name_model['fwfm_v_l2_0.0000001'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_w_l2_0.1'] = FwFM(**{
+d_name_conf['fwfm_w_l2_0.1'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -790,7 +791,7 @@ d_name_model['fwfm_w_l2_0.1'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_w_l2_0.01'] = FwFM(**{
+d_name_conf['fwfm_w_l2_0.01'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -805,7 +806,7 @@ d_name_model['fwfm_w_l2_0.01'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_w_l2_0.001'] = FwFM(**{
+d_name_conf['fwfm_w_l2_0.001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -820,7 +821,7 @@ d_name_model['fwfm_w_l2_0.001'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_w_l2_0.0001'] = FwFM(**{
+d_name_conf['fwfm_w_l2_0.0001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -835,7 +836,7 @@ d_name_model['fwfm_w_l2_0.0001'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_w_l2_0.00001'] = FwFM(**{
+d_name_conf['fwfm_w_l2_0.00001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -850,7 +851,7 @@ d_name_model['fwfm_w_l2_0.00001'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_w_l2_0.000001'] = FwFM(**{
+d_name_conf['fwfm_w_l2_0.000001'] = FwFM(**{
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],
     'layer_keeps': [1, 1],
@@ -865,7 +866,7 @@ d_name_model['fwfm_w_l2_0.000001'] = FwFM(**{
         'r': 0.0
     }
 })
-d_name_model['fwfm_gd'] = FwFM(**{
+d_name_conf['fwfm_gd'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -875,7 +876,7 @@ d_name_model['fwfm_gd'] = FwFM(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['fwfm_momentum'] = FwFM(**{
+d_name_conf['fwfm_momentum'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -885,7 +886,7 @@ d_name_model['fwfm_momentum'] = FwFM(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['fwfm_nesterov'] = FwFM(**{
+d_name_conf['fwfm_nesterov'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -895,7 +896,7 @@ d_name_model['fwfm_nesterov'] = FwFM(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['fwfm_adagrad'] = FwFM(**{
+d_name_conf['fwfm_adagrad'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -905,7 +906,7 @@ d_name_model['fwfm_adagrad'] = FwFM(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['fwfm_adadelta'] = FwFM(**{
+d_name_conf['fwfm_adadelta'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -915,7 +916,7 @@ d_name_model['fwfm_adadelta'] = FwFM(**{
         'kernel_l2': 0,
         'random_seed': 0
     })
-d_name_model['fwfm_adam'] = FwFM(**{
+d_name_conf['fwfm_adam'] = FwFM(**{
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -926,7 +927,7 @@ d_name_model['fwfm_adam'] = FwFM(**{
         'random_seed': 0
     })
 '''
-d_name_model['ffm'] = FFM(**{
+d_name_conf['ffm'] = {
         'layer_sizes': [field_sizes, 10, 1],
         'layer_acts': ['none', 'none'],
         'layer_keeps': [1, 1],
@@ -935,9 +936,71 @@ d_name_model['ffm'] = FFM(**{
         'layer_l2': [0, 0],
         'kernel_l2': 0,
         'random_seed': 0,
-        'has_field_bias': False
-    })
-#for name in d_name_model.keys():
+    }
+
+d_name_conf['ffm_l2_v_0.01'] = {
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'l2_dict': {
+            'v': 0.01,
+        }
+    }
+
+d_name_conf['ffm_l2_v_0.001'] = {
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'l2_dict': {
+            'v': 0.001,
+        }
+    }
+d_name_conf['ffm_l2_v_0.0001'] = {
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'l2_dict': {
+            'v': 0.0001,
+        }
+    }
+d_name_conf['ffm_l2_v_0.00001'] = {
+        'layer_sizes': [field_sizes, 10, 1],
+        'layer_acts': ['none', 'none'],
+        'layer_keeps': [1, 1],
+        'opt_algo': 'adam',
+        'learning_rate': 0.0005,
+        'layer_l2': [0, 0],
+        'kernel_l2': 0,
+        'random_seed': 0,
+        'l2_dict': {
+            'v': 0.00001,
+        }
+    }
+
+def mapConf2Model(name):
+    conf = d_name_conf[name]
+    model_name = name.split('_')[0]
+    if model_name == 'ffm':
+        return FFM(**conf)
+    elif mode_name == 'fwfm':
+        return FwFM(**conf)
+
+#for name in d_name_conf.keys():
 #for name in ['fast_ctr_concat', 'fnn']:
 #for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd']:
 #for name in ['pnn1_fixed_0.001', 'pnn1_fixed_0.001_5', 'pnn1_fixed_0.001_20', 'pnn1_fixed_0.001_50', 'pnn1_fixed_0.001_gd', 'pnn1_fixed_0.001_dropout-0.5', 'pnn1_fixed_0.001_l2-1-0.5']:
@@ -965,8 +1028,8 @@ d_name_model['ffm'] = FFM(**{
 #for name in ['fwfm']:
 #for name in ['fwfm_v_l2_0.1', 'fwfm_v_l2_0.01', 'fwfm_v_l2_0.001', 'fwfm_v_l2_0.0001', 'fwfm_v_l2_0.00001', 'fwfm_v_l2_0.000001', 'fwfm_v_l2_0.0000001']:
 #for name in ['fwfm_w_l2_0.1', 'fwfm_w_l2_0.01', 'fwfm_w_l2_0.001', 'fwfm_w_l2_0.0001', 'fwfm_w_l2_0.00001', 'fwfm_w_l2_0.000001']:
-for name in ['ffm']:
+for name in ['ffm_l2_v_0.01', 'ffm_l2_v_0.001', 'ffm_l2_v_0.0001', 'ffm_l2_v_0.00001']:
     print 'name with none activation', name
     sys.stdout.flush()
-    model = d_name_model[name]
+    model = mapConf2Model(name)
     train(model, 'yahoo_dataset2.2_' + name)

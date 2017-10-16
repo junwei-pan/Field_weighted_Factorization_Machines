@@ -11,7 +11,7 @@ FIELD_SIZES = [0] * 15
 #with open('../data_yahoo/dataset2/featindex_thres10.txt') as fin:
 #with open('../data_cretio/featindex_thres20.txt') as fin:
 #with open('../data_yahoo/featindex_25m_thres10.txt') as fin:
-with open('/tmp/jwpan/data_yahoo/dataset2/featindex_ffm12.6_thres10.txt') as fin:
+with open('/tmp/jwpan/data_yahoo/dataset2/featindex_thres10.txt') as fin:
     for line in fin:
         line = line.strip().split(':')
         if len(line) > 1:

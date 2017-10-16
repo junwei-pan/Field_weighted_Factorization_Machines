@@ -699,7 +699,7 @@ class FwFM:
             kernel_l2: 0
         """
         init_vars = []
-        num_inputs = len(layer_sizes[0])
+        num_inputs = len(layer_sizes[0]) # Number of fields, i.e., M
         factor_order = layer_sizes[1]
         for i in range(num_inputs):
             layer_input = layer_sizes[0][i]
@@ -759,10 +759,6 @@ class FwFM:
                 l_right = tf.gather(l_trans, index_right)
                 p = tf.transpose(tf.multiply(l_left, l_right), [1, 0, 2])
                 p = tf.reduce_sum(p, 2)
-                print 'l_trans', l_trans.shape
-                print 'l_left', l_left.shape
-                print 'l_right', l_right.shape
-                print 'p', p.shape
                 p = tf.nn.dropout(
                     utils.activate(
                         tf.matmul(
@@ -977,14 +973,13 @@ class FFM:
             kernel_l2: 0
         """
         init_vars = []
-        num_inputs = len(layer_sizes[0])
+        num_inputs = len(layer_sizes[0]) # Number of fields, i.e., M.
         factor_order = layer_sizes[1]
         for i in range(num_inputs):
             layer_input = layer_sizes[0][i]
             layer_output = factor_order
             init_vars.append(('w_l_v_all_%d' % i, [layer_input, 1], 'tnormal', dtype))
-            #init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
-            init_vars.append(('w0_%d' % i, [layer_input, (num_inputs-1)*layer_output], 'tnormal', dtype))
+            init_vars.append(('w0_%d' % i, [layer_input, (num_inputs-1) * layer_output], 'tnormal', dtype))
 
         init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
 
@@ -1035,8 +1030,6 @@ class FFM:
                 if l2_dict is not None:
                     if l2_dict.has_key('linear_w'):
                         self.loss += l2_dict['linear_w'] * tf.nn.l2_loss(w_l_v)
-                    if l2_dict.has_key('r'):
-                        self.loss += l2_dict['r'] * tf.nn.l2_loss(w_p)
                     if l2_dict.has_key('v'):
                         for i in range(num_inputs):
                             self.loss += l2_dict['v'] * tf.nn.l2_loss(self.vars['w0_%d' % i])
