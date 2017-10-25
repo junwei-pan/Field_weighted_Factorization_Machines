@@ -137,9 +137,6 @@ class statis:
             mi += p_fi_fi_neg * math.log(p_fi_fi_neg / (p_fi_fj * p_neg))
         return mi
         
-
-
-
 statis = statis()
 print 'load feature index'
 statis.load_feature_index('/tmp/jwpan/data_yahoo/dataset2/featindex_25m_thres10.txt')
