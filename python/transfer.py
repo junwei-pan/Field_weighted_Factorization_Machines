@@ -7,36 +7,44 @@ This script will do the following tasks:
     2. Transfer the original tsv files to libsvm format.
 '''
 
-'''
 # Configuration for Criteo data set
 index_label = 0
-lst_index_cat = range(14, 14 + 26)
-num_field = 26
+index_cat_start = 14
+num_fields = 26
+lst_index_cat = range(index_cat_start, index_cat_start + num_fields)
 thres = 20
-'''
 # Configuration for Yahoo data set
+'''
 index_label = 28
-num_field = 15
-lst_index_cat = range(num_field)
+num_fields = 15
+lst_index_cat = range(num_fields)
 thres = 10
+'''
 
 print "Index of label", index_label
 print "List of indexes of categorical features", lst_index_cat
-print "Number of fields", num_field
+print "Number of fields", num_fields
 print "Threshold", thres
 
 d_field_fea = {}
 d_fea_index = {}
 d_field_fea_cnt = {}
-#path_train = '/tmp/jwpan/data_cretio/train.txt'
-##path_train = '../data_yahoo/ctr_20170524_0530_0.003.txt'
-path_train = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt'
-#path_train = '../data_cretio/train.txt'
-path_test = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1'
+# Yahoo CTR data set.
+'''
+path_train = '../data_yahoo/ctr_20170517_0530_0.015.txt'
+path_test = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
 #path_test = '../data_yahoo/ctr_20170601.txt.downsample_all.0.1'
+'''
+
+# Criteo CTR data set.
+#path_train = '../data_cretio/train.txt.train'
+path_train = '../data_cretio/train.txt.train'
+path_validation = '../data_cretio/train.txt.validation'
+path_test = '../data_cretio/train.txt.test'
 #path_fea_index = '../data_yahoo/featindex_3m_thres' + str(thres) + '.txt'
 #path_fea_index = '../data_yahoo/featindex_25m_thres' + str(thres) + '.txt'
-#path_fea_index = '../data_cretio/featindex_thres20.txt'
+path_fea_index = '../data_cretio/featindex_thres20.txt'
+
 batch = 100000
 
 def get_lines_of_file(path):
@@ -57,20 +65,25 @@ def build_field_feature(path, mode):
             print i * 1.0 / total
             sys.stdout.flush()
         lst = line.strip('\n').split('\t')
-        for idx_field in lst_index_cat:
-            fea = lst[idx_field]
+        for idx_field in range(num_fields):
+            fea = lst[index_cat_start + idx_field]
             d_field_fea.setdefault(idx_field, set())
             d_field_fea[idx_field].add(fea)
             d_field_fea_cnt.setdefault(idx_field, {})
             d_field_fea_cnt[idx_field].setdefault(fea, 0) 
             d_field_fea_cnt[idx_field][fea] += 1
 
-def create_fea_index(path):
+def create_fea_index(path, model):
     cnt_qualify = 0
     cnt_filter = 0
-    index = 0
-    file = open(path, 'w')
-    for idx_field in lst_index_cat:
+    # The feature index for LibLinear package should start from 1 rather than from 0.
+    if model == 'liblinear':
+        index = 1
+        file = open(path + '.liblinear', 'w')
+    else:
+        index = 0
+        file = open(path, 'w')
+    for idx_field in range(num_fields):
         d_fea_index.setdefault(idx_field, {})
         d_fea_index[idx_field]['zero_fea_for_field_' + str(idx_field)] = index
         file.write("%d:%s\t%d\n" % (idx_field, 'zero_fea_for_field_' + str(idx_field), index))
@@ -97,7 +110,7 @@ def create_ffm_fea_index(path, d=14, k=2):
     cnt_fea_after_hash = 0
     index = 0
     file = open(path, 'w')
-    for idx_field in lst_index_cat:
+    for idx_field in range(num_fields):
         cnt_qualify_for_this_field = 0
         d_fea_index.setdefault(idx_field, {})
         d_fea_index[idx_field]['zero_fea_for_field_' + str(idx_field)] = index
@@ -139,12 +152,14 @@ def create_yx(path, mode, model='fm', d=14, k=2):
     There is some samples whose all features are rare(# < thres), 
     we need to filter all these samples, use cnt_filter as the counter.
     '''
-    suffix = str(round(d / (10.0 / k)), 2)
     cnt_qualify = 0
     cnt_filter = 0
     total = get_lines_of_file(path)
     if model == 'ffm':
+        suffix = str(round(d / (10.0 / k)), 2)
         file = open(path + '.thres' + str(thres) + '.ffm' + suffix + '.yx', 'w')
+    elif model == 'liblinear':
+        file = open(path + '.thres' + str(thres) + '.liblinear.yx', 'w')
     else:
         file = open(path + '.thres' + str(thres) + '.yx', 'w')
     for i, line in enumerate(open(path)):
@@ -161,8 +176,8 @@ def create_yx(path, mode, model='fm', d=14, k=2):
                 print 'label', label
         elif mode == 'test':
             res.append('0')
-        for idx in lst_index_cat:
-            fea = lst[idx]
+        for idx in range(num_fields):
+            fea = lst[index_cat_start + idx]
             if i == 0:
                 print 'idx: %d, fea: %s' % (idx, fea)
             if d_fea_index.has_key(idx) and d_fea_index[idx].has_key(fea):
@@ -180,9 +195,11 @@ def create_yx(path, mode, model='fm', d=14, k=2):
     print "number of samples with all rare features: ", cnt_filter
     file.close()
 
-d=14
+# To generate several data sets for FFM with different hashing space.
+'''
+d = 14
 for k in range(1, 10):
-    suffix = str(round(d/(10.0/k)), 2)
+    suffix = str(round(d/(10.0/k), 2))
     path_fea_ffm_index = '../data_yahoo/featindex_ffm'+ suffix +'_thres20.txt'
 
     print 'build field feature'
@@ -195,4 +212,21 @@ for k in range(1, 10):
     print 'create yx'
     #create_yx(path_train, 'train')
     create_yx(path_train, 'train', 'ffm', d, k)
-    create_yx(path_test, 'train', 'ffm', d, k)
+    #create_yx(path_test, 'train', 'ffm', d, k)
+'''
+
+flagLibLinear = False
+model = 'liblinear'
+print ' ===> model: %s <=== ' % model
+
+print 'build field feature'
+build_field_feature(path_train, 'train')
+
+print 'create fea index'
+create_fea_index(path_fea_index, model)
+#create_ffm_fea_index(path_fea_ffm_index, d, k)
+
+print 'create yx'
+create_yx(path_train, 'train', model)
+create_yx(path_validation, 'train', model)
+create_yx(path_test, 'train', model)
