@@ -1,28 +1,33 @@
-import numpy as np
-from sklearn.metrics import roc_auc_score
-from scipy.sparse import coo_matrix
 import time 
 import sys
+import json
+from sklearn.metrics import roc_auc_score
+from scipy.sparse import coo_matrix
 import tensorflow as tf
+import numpy as np
 from time import gmtime, strftime
 import pickle as pkl
 from itertools import islice
 from conf.conf_fwfm import *
+from conf.conf_ffm import *
+from conf.conf_lr import *
+from conf.conf_fm import *
 
 import utils
-from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM#, FwFM_LE
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM
 
-#train_file = '../data_cretio/train.txt.thres20.yx.0.7'
-#test_file = '../data_cretio/train.txt.thres20.yx.0.3'
-#train_file = '../data_cretio/train.txt.100000.yx.0.7'
-#test_file = '../data_cretio/train.txt.100000.yx.0.3'
+# Criteo CTR data set
+train_file = '/tmp/jwpan/data_criteo/train.txt.train.thres20.yx'
+test_file = '/tmp/jwpan/data_criteo/train.txt.validation.thres20.yx'
+
+# Yahoo CTR data set
+'''
 train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
 test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
 #train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm12.6.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
-#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx.1000'
-#train_file = '../data_yahoo/ctr_20170517_0530_0.015.txt.thres10.yx.100000'
-#test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100000'
+#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
+'''
 
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
@@ -30,13 +35,6 @@ print "test_file: ", test_file
 sys.stdout.flush()
 
 input_dim = utils.INPUT_DIM
-
-"""
-with tf.device('/gpu:0'):
-    #tensorflow_dataset = tf.constant(numpy_dataset)
-    train_data = tf.constant(utils.read_data(train_file))
-    test_data = tf.constant(utils.read_data(test_file))
-"""
 
 train_label = utils.read_label(train_file)
 test_label = utils.read_label(test_file)
@@ -50,6 +48,7 @@ num_round = 1000
 early_stop_round = 2
 batch_size = 2000
 bb = 10
+round_no_improve = 5
 
 field_offsets = utils.FIELD_OFFSETS
 
@@ -68,7 +67,7 @@ def train(model, name):
                 if not lines_gen:
                     break
                 for ib in range(bb):
-                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)]), 0, -1)
+                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)], name), 0, -1)
                     _, l = model.run(fetches, X_i, y_i)
                     ls.append(l)
         elif batch_size == -1:
@@ -87,7 +86,7 @@ def train(model, name):
                 if not lines_gen:
                     break
                 for ib in range(bb):
-                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)]), 0, -1)
+                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)], name), 0, -1)
                     _train_preds = model.run(model.y_prob, X_i)
                     lst_train_pred.append(_train_preds)
             """
@@ -103,7 +102,7 @@ def train(model, name):
                 if not lines_gen:
                     break
                 for ib in range(bb):
-                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)]), 0, -1)
+                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)], name), 0, -1)
                     _test_preds = model.run(model.y_prob, X_i)
                     lst_test_pred.append(_test_preds)
             """
@@ -118,8 +117,8 @@ def train(model, name):
         train_score = roc_auc_score(train_label, train_preds)
         test_score = roc_auc_score(test_label, test_preds)
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-        path_model = 'model/' + str(name) + '_epoch_' + str(i)
-        path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
+        #path_model = 'model/' + str(name) + '_epoch_' + str(i)
+        #path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
         #model.dump(path_model)
         d_label_score = {}
         d_label_score['label'] = test_label
@@ -128,12 +127,17 @@ def train(model, name):
         sys.stdout.flush()
         history_score.append(test_score)
         if i > min_round and i > early_stop_round:
-            #if np.argmax(history_score) == i - early_stop_round and history_score[-1] - history_score[
-            #            -1 * early_stop_round] < 1e-5:
             i_max = np.argmax(history_score)
+            # Early stop
             if i - i_max >= early_stop_round:
                 print 'early stop\nbest iteration:\n[%d]\teval-auc: %f' % (
                     np.argmax(history_score), np.max(history_score))
+                sys.stdout.flush()
+                break
+            # No improvement for round_no_improve rounds
+            elif history_score[-1] - history_score[max(-1 * round_no_improve, -1 * len(history_score))] < 1e-4:
+                print 'no improvement for %d rounds. \nbest iteration:\n[%d]\teval-auc: %f' % (
+                    round_no_improve, np.argmax(history_score), np.max(history_score))
                 sys.stdout.flush()
                 break
 
@@ -146,6 +150,8 @@ def mapConf2Model(name):
         return FwFM(**conf)
     elif model_name == 'fm':
         return FM(**conf)
+    elif model_name == 'lr':
+        return LR(**conf)
 
 #for name in ['fmnn_3way', 'pnn1_fixed_0.0005_no_field_bias', 'pnn1_fixed_0.0005_dropout']:
 #for name in ['fwfm_0.0005', 'fwfm_0.0005_without_field_bias']:
@@ -170,8 +176,16 @@ def mapConf2Model(name):
 #for name in ['fm_0.01', 'fm_0.001', 'fm_0.0001', 'fm_0.0001']:
 #for name in ['ffm_l2_v_0.000001', 'ffm_l2_v_0.0000001', 'ffm_l2_v_0.00000001']:
 #for name in ['ffm_l2_v_0.00001']:
-for name in ['fwfm_l2_v_0.1', 'fwfm_l2_v_1e-2', 'fwfm_l2_v_1e-3', 'fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6']:
+#for name in ['ffm_l2_v_1e-7_lr_1e-1', 'ffm_l2_v_1e-7_lr_1e-2', 'ffm_l2_v_1e-7_lr_1e-3', 'ffm_l2_v_1e-7_lr_1e-4', 'ffm_l2_v_1e-7_lr_1e-5', 'ffm_l2_v_1e-7_lr_1e-6']:
+#for name in ['fwfm_l2_v_1e-1', 'fwfm_l2_v_1e-2', 'fwfm_l2_v_1e-3', 'fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6', 'fwfm_l2_v_1e-7', 'fwfm_l2_v_1e-8']:
+#for name in ['ffm_l2_v_1e-7_lr_1e-4']:
+#for name in ['lr_l2_1e-7', 'lr_l2_1e-8', 'lr_l2_1e-9']:
+#for name in ['fwfm_l2_v_1e-1', 'fwfm_l2_v_1e-2', 'fwfm_l2_v_1e-3', 'fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6', 'fwfm_l2_v_1e-7', 'fwfm_l2_v_1e-8']:
+#for name in ['ffm_l2_v_1e-1', 'ffm_l2_v_1e-2', 'ffm_l2_v_1e-3', 'ffm_l2_v_1e-4', 'ffm_l2_v_1e-5', 'ffm_l2_v_1e-6', 'ffm_l2_v_1e-7', 'ffm_l2_v_1e-8']:
+#for name in ['lr_l2_1e-1', 'lr_l2_1e-2', 'lr_l2_1e-3', 'lr_l2_1e-4', 'lr_l2_1e-5', 'lr_l2_1e-6', 'lr_l2_1e-7', 'lr_l2_1e-8']:
+for name in ['fm_l2_v_1e-1', 'fm_l2_v_1e-2', 'fm_l2_v_1e-3', 'fm_l2_v_1e-4', 'fm_l2_v_1e-5', 'fm_l2_v_1e-6', 'fm_l2_v_1e-7', 'fm_l2_v_1e-8']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
-    train(model, 'yahoo_dataset2.2_' + name)
+    #train(model, name + '_yahoo_dataset2.2')
+    train(model, name + '_criteo')

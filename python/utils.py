@@ -7,11 +7,14 @@ from scipy.sparse import coo_matrix
 
 DTYPE = tf.float64
 
-FIELD_SIZES = [0] * 15
+FIELD_SIZES = [0] * 26
+d_name_conf = {}
 #with open('../data_yahoo/dataset2/featindex_thres10.txt') as fin:
 #with open('../data_cretio/featindex_thres20.txt') as fin:
 #with open('../data_yahoo/featindex_25m_thres10.txt') as fin:
-with open('/tmp/jwpan/data_yahoo/dataset2/featindex_25m_thres10.txt') as fin:
+path_feature_index = '/tmp/jwpan/data_criteo/featindex_thres20.txt'
+#path_feature_index = '/tmp/jwpan/data_yahoo/dataset2/featindex_25m_thres10.txt'
+with open(path_feature_index) as fin:
     for line in fin:
         line = line.strip().split(':')
         if len(line) > 1:
@@ -26,7 +29,8 @@ MINVAL = -1e-2
 MAXVAL = 1e-2
 
 
-def process_lines(lines):
+def process_lines(lines, name):
+    model = name.split('_')[0]
     X = []
     y = []
     for line in lines:
@@ -37,7 +41,10 @@ def process_lines(lines):
         X.append(X_i)
     y = np.reshape(np.array(y), (-1, 1))
     X = libsvm_2_coo(X, (len(X), INPUT_DIM)).tocsr()
-    return split_data([X, y])
+    if model in set(['lr', 'fm']):
+        return X, y
+    else:
+        return split_data((X, y))
 
 def read_data(file_name):
     X = []
