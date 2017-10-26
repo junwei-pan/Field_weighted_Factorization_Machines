@@ -17,13 +17,15 @@ import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM
 
 # Criteo CTR data set
+'''
 train_file = '/tmp/jwpan/data_criteo/train.txt.train.thres20.yx.100k'
 test_file = '/tmp/jwpan/data_criteo/train.txt.validation.thres20.yx.100k'
+'''
 
 # Yahoo CTR data set
-'''
 train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
 test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+'''
 #train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm12.6.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
@@ -117,12 +119,12 @@ def train(model, name):
         train_score = roc_auc_score(train_label, train_preds)
         test_score = roc_auc_score(test_label, test_preds)
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-        #path_model = 'model/' + str(name) + '_epoch_' + str(i)
-        #path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
-        #model.dump(path_model)
+        path_model = 'model/' + str(name) + '_epoch_' + str(i)
+        model.dump(path_model)
         d_label_score = {}
         d_label_score['label'] = test_label
         d_label_score['score'] = test_preds
+        #path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
         #pkl.dump(d_label_score, open(path_label_score, 'wb'))
         sys.stdout.flush()
         history_score.append(test_score)

@@ -1,3 +1,4 @@
+import sys
 import pickle as pkl
 import numpy as np
 import scipy
@@ -6,7 +7,8 @@ from scipy.stats.stats import pearsonr
 
 class statis:
     def __init__(self):
-        self.k = 15
+        self.M = 15 # Number of fields.
+        self.k = 10 # Dimension of embedding vector.
         self.d = {}
         self.d_idx2embedding = {}
         self.d_idx2idxField = {}
@@ -19,25 +21,33 @@ class statis:
         self.cnt_neg = 0.0
         self.d_fieldPair_r = {}
 
-    def load_model(self, path_model, type = 'fwfm'):
+    def load_model(self, path_model, model = 'fwfm'):
         self.d = pkl.load(open(path_model, 'rb'))
         self.idx2key = {}
         idx_last_field = 0
         name_last_field = '0'
         total_idx = 0
-        if type == 'fwfm':
-            for i in range(self.k):
+        if model == 'fwfm':
+            for i in range(self.M):
                 d_field_i = self.d['w0_' + str(i)]
                 for j in range(len(d_field_i)):
                     self.d_idx2embedding[total_idx] = d_field_i[j]
                     total_idx += 1
             idx = 0
-            for i in range(self.k):
-                for j in range(i+1, self.k):
+            for i in range(self.M):
+                for j in range(i+1, self.M):
                     field_pair = str(i) + '_' + str(j)
                     self.d_fieldPair_r[field_pair] = self.d['w_p'][idx][0]
                     idx += 1
-        elif type == 'fm':
+        elif model == 'ffm':
+            for i in range(self.M):
+                d_field_i = self.d['w0_' + str(i)]
+                for j in range(len(d_field_i)):
+                    self.d_idx2embedding[total_idx] = []
+                    for l in range(self.M):
+                        self.d_idx2embedding[total_idx].append(d_field_i[j][self.k * l : self.k * (l + 1)])
+                    total_idx += 1
+        elif model == 'fm':
             for i in range(len(self.d['v'])):
                 self.d_idx2embedding[i] = self.d['v'][i]
             
@@ -50,10 +60,11 @@ class statis:
 
     def load_data(self, path):
         bin = 100000
-        for iii, line in enumerate(open(path)):
+        for idx_line, line in enumerate(open(path)):
             self.cnt_sample += 1
-            if iii % bin == bin - 1:
-                print iii
+            if idx_line % bin == bin - 1:
+                print idx_line
+                sys.stdout.flush()
             lst = line.strip('\n').split(' ')
             label = int(lst[0])
             if label == 1:
@@ -81,8 +92,11 @@ class statis:
             self.lst_fea.append(lst_fea)
             self.lst_label.append(label)
 
-    def get_feature_dot_product(self, i, j):
-        return np.dot(self.d_idx2embedding[i], self.d_idx2embedding[j])
+    def get_feature_dot_product(self, i, j, fi, fj, model = 'fm'):
+        if model == 'ffm':
+            return np.dot(self.d_idx2embedding[i][fj], self.d_idx2embedding[j][fi])
+        else:
+            return np.dot(self.d_idx2embedding[i], self.d_idx2embedding[j])
 
     def get_field_corr(self, fi, fj):
         '''
@@ -92,7 +106,7 @@ class statis:
         for lst_fea in self.lst_fea:
             i = lst_fea[fi]
             j = lst_fea[fj]
-            res.append(self.get_feature_dot_product(i, j))
+            res.append(self.get_feature_dot_product(i, j, fi, fj, model))
         return res
 
     def get_field_pair_pearson_corr_with_label(self, fi, fj):
@@ -105,7 +119,7 @@ class statis:
         '''
         pass
 
-    def average_latent_vector_dot_product_for_field_pair(self, fi, fj, type ='fwfm'):
+    def average_latent_vector_dot_product_for_field_pair(self, fi, fj, model ='fwfm'):
         sum = 0.0
         sum_abs = 0.0
         sum_cnt = 0.0
@@ -114,10 +128,10 @@ class statis:
         for feature_pair in self.d_fieldPair_featurePair[field_pair]:
             cnt = self.d_fieldPair_featurePair[field_pair][feature_pair]['cnt']
             r = 1
-            if type == 'fwfm':
+            if model == 'fwfm':
                 r = self.d_fieldPair_r[field_pair]
             fea_i, fea_j = map(int, feature_pair.split('_'))
-            dot = self.get_feature_dot_product(fea_i, fea_j)
+            dot = self.get_feature_dot_product(fea_i, fea_j, fi, fj, model)
             sum += dot * cnt * r
             sum_abs += abs(dot * r) * cnt 
             sum_cnt += cnt
@@ -139,16 +153,21 @@ class statis:
         
 statis = statis()
 print 'load feature index'
+sys.stdout.flush()
 statis.load_feature_index('/tmp/jwpan/data_yahoo/dataset2/featindex_25m_thres10.txt')
 print 'load data'
+sys.stdout.flush()
 statis.load_data('/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx')
 print 'load model'
+sys.stdout.flush()
 #statis.load_model('/homes/jwpan/Github/product-nets/python/model/fm_epoch_1', 'fm')
-statis.load_model('model/yahoo_dataset2.2_fwfm_epoch_2', 'fwfm')
+#statis.load_model('model/yahoo_dataset2.2_fwfm_epoch_2', 'fwfm')
+statis.load_model('model/ffm_l2_v_1e-7_lr_1e-4_criteo_epoch_0', 'ffm')
 for fi in range(15):
     for fj in range(fi+1, 15):
-        res = statis.average_latent_vector_dot_product_for_field_pair(fi, fj, 'fwfm')
+        res = statis.average_latent_vector_dot_product_for_field_pair(fi, fj, 'ffm')
         print "%f\t%f\t%f\t%f" % (res[0], res[1], res[2], res[3])
+        sys.stdout.flush()
         #res = statis.mutual_information(fi, fj)
         #print res
         #res = statis.get_field_pair_pearson_corr_with_label(i,j)
