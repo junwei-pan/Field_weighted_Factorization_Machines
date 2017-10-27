@@ -4,6 +4,7 @@ import numpy as np
 import scipy
 import math
 from scipy.stats.stats import pearsonr
+from scipy.stats import kendalltau
 
 class statis:
     def __init__(self):
@@ -47,6 +48,7 @@ class statis:
                     for l in range(self.M):
                         self.d_idx2embedding[total_idx].append(d_field_i[j][self.k * l : self.k * (l + 1)])
                     total_idx += 1
+            print self.d_idx2embedding.keys()
         elif model == 'fm':
             for i in range(len(self.d['v'])):
                 self.d_idx2embedding[i] = self.d['v'][i]
@@ -151,24 +153,51 @@ class statis:
             mi += p_fi_fi_neg * math.log(p_fi_fi_neg / (p_fi_fj * p_neg))
         return mi
         
-statis = statis()
-print 'load feature index'
-sys.stdout.flush()
-statis.load_feature_index('/tmp/jwpan/data_yahoo/dataset2/featindex_25m_thres10.txt')
-print 'load data'
-sys.stdout.flush()
-statis.load_data('/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx')
-print 'load model'
-sys.stdout.flush()
-#statis.load_model('/homes/jwpan/Github/product-nets/python/model/fm_epoch_1', 'fm')
-#statis.load_model('model/yahoo_dataset2.2_fwfm_epoch_2', 'fwfm')
-statis.load_model('model/ffm_l2_v_1e-7_lr_1e-4_criteo_epoch_0', 'ffm')
-for fi in range(15):
-    for fj in range(fi+1, 15):
-        res = statis.average_latent_vector_dot_product_for_field_pair(fi, fj, 'ffm')
-        print "%f\t%f\t%f\t%f" % (res[0], res[1], res[2], res[3])
-        sys.stdout.flush()
-        #res = statis.mutual_information(fi, fj)
-        #print res
-        #res = statis.get_field_pair_pearson_corr_with_label(i,j)
-        #print '%d\t%d\t%f\t%f' % (i, j, res[0], res[1])
+def load_list(path):
+    lst = []
+    for line in open(path):
+        lst.append(float(line.strip('\n')))
+    return lst
+
+def main_field_interaction():
+
+    statis = statis()
+    #print 'load feature index'
+    #sys.stdout.flush()
+    #statis.load_feature_index('../data_yahoo/dataset2/featindex_25m_thres10.txt')
+    print 'load data'
+    sys.stdout.flush()
+    #statis.load_data('../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx')
+    statis.load_data('../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.downsample_all.0.05')
+    print 'load model'
+    sys.stdout.flush()
+    #statis.load_model('/homes/jwpan/Github/product-nets/python/model/fm_epoch_1', 'fm')
+    #statis.load_model('model/yahoo_dataset2.2_fwfm_epoch_2', 'fwfm')
+    statis.load_model('model/ffm_l2_v_1e-7_lr_1e-4_yahoo_epoch_2', 'ffm')
+    for fi in range(15):
+        for fj in range(fi+1, 15):
+            res = statis.average_latent_vector_dot_product_for_field_pair(fi, fj, 'ffm')
+            print "%f\t%f\t%f\t%f" % (res[0], res[1], res[2], res[3])
+            sys.stdout.flush()
+            #res = statis.mutual_information(fi, fj)
+            #print res
+            #res = statis.get_field_pair_pearson_corr_with_label(i,j)
+            #print '%d\t%d\t%f\t%f' % (i, j, res[0], res[1])
+
+def main_kendalltau():
+    path_mi = 'data/yahoo_mi'
+    path_fm = 'data/yahoo_fm'
+    path_ffm = 'data/yahoo_ffm'
+    path_fwfm = 'data/yahoo_fwfm'
+    x_mi = load_list(path_mi)
+    x_fm = load_list(path_fm)
+    x_ffm = load_list(path_ffm)
+    x_fwfm = load_list(path_fwfm)
+    print 'mi v.s fm'
+    print kendalltau(x_mi, x_fm)
+    print 'mi v.s ffm'
+    print kendalltau(x_mi, x_ffm)
+    print 'mi v.s fwfm'
+    print kendalltau(x_mi, x_fwfm)
+
+main_kendalltau()

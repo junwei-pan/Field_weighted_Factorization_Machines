@@ -1,4 +1,6 @@
 import sys
+import json
+import numpy as np
 
 path = sys.argv[1]
 n = 15
@@ -31,6 +33,17 @@ for i in range(n):
     for j in range(n):
         res.append(d[i][j])
     print '\t'.join(map(str, res))
+
+lst = []
+for i in range(n):
+    l = []
+    for j in range(n):
+        l.append(d[i][j])
+    lst.append(l)
+
+with open(sys.argv[1] + '.json', 'w') as out:
+    json.dump(lst, out)
+
 '''
 for i in range(n):
     res = []
@@ -39,4 +52,3 @@ for i in range(n):
         res.append(data[idx])
     print '\t'.join(res)
 '''
-
