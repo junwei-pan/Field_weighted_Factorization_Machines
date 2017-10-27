@@ -13,6 +13,7 @@ index_cat_start = 14
 num_fields = 26
 lst_index_cat = range(index_cat_start, index_cat_start + num_fields)
 thres = 20
+
 # Configuration for Yahoo data set
 '''
 index_label = 28
@@ -32,17 +33,14 @@ d_field_fea_cnt = {}
 # Yahoo CTR data set.
 '''
 path_train = '../data_yahoo/ctr_20170517_0530_0.015.txt'
+path_validation = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
 path_test = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
-#path_test = '../data_yahoo/ctr_20170601.txt.downsample_all.0.1'
 '''
 
 # Criteo CTR data set.
-#path_train = '../data_cretio/train.txt.train'
-path_train = '../data_cretio/train.txt.train'
-path_validation = '../data_cretio/train.txt.validation'
-path_test = '../data_cretio/train.txt.test'
-#path_fea_index = '../data_yahoo/featindex_3m_thres' + str(thres) + '.txt'
-#path_fea_index = '../data_yahoo/featindex_25m_thres' + str(thres) + '.txt'
+path_train = '../data_cretio/train.txt.train.100k'
+path_validation = '../data_cretio/train.txt.validation.100k'
+path_test = '../data_cretio/train.txt.test.100k'
 path_fea_index = '../data_cretio/featindex_thres20.txt'
 
 batch = 100000
@@ -156,7 +154,7 @@ def create_yx(path, mode, model='fm', d=14, k=2):
     cnt_filter = 0
     total = get_lines_of_file(path)
     if model == 'ffm':
-        suffix = str(round(d / (10.0 / k)), 2)
+        suffix = str(round(d / (10.0 / k), 2))
         file = open(path + '.thres' + str(thres) + '.ffm' + suffix + '.yx', 'w')
     elif model == 'liblinear':
         file = open(path + '.thres' + str(thres) + '.liblinear.yx', 'w')
@@ -196,25 +194,25 @@ def create_yx(path, mode, model='fm', d=14, k=2):
     file.close()
 
 # To generate several data sets for FFM with different hashing space.
-'''
-d = 14
-for k in range(1, 10):
-    suffix = str(round(d/(10.0/k), 2))
-    path_fea_ffm_index = '../data_yahoo/featindex_ffm'+ suffix +'_thres20.txt'
+d = 26 - 1
 
-    print 'build field feature'
-    build_field_feature(path_train, 'train')
+print 'build field feature'
+build_field_feature(path_train, 'train')
+
+for k in range(1, 10):
+    suffix = str(round(d / (10.0 / k), 2))
+    path_fea_ffm_index = '../data_cretio/featindex_ffm'+ suffix +'_thres' + str(thres) + '.txt'
 
     print 'create fea index'
     #create_fea_index(path_fea_index)
     create_ffm_fea_index(path_fea_ffm_index, d, k)
 
     print 'create yx'
-    #create_yx(path_train, 'train')
     create_yx(path_train, 'train', 'ffm', d, k)
-    #create_yx(path_test, 'train', 'ffm', d, k)
-'''
+    create_yx(path_validation, 'train', 'ffm', d, k)
+    create_yx(path_test, 'train', 'ffm', d, k)
 
+'''
 flagLibLinear = False
 model = 'liblinear'
 print ' ===> model: %s <=== ' % model
@@ -230,3 +228,4 @@ print 'create yx'
 create_yx(path_train, 'train', model)
 create_yx(path_validation, 'train', model)
 create_yx(path_test, 'train', model)
+'''
