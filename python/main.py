@@ -17,19 +17,15 @@ import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM
 
 # Criteo CTR data set
-'''
-train_file = '/tmp/jwpan/data_criteo/train.txt.train.thres20.yx.100k'
-test_file = '/tmp/jwpan/data_criteo/train.txt.validation.thres20.yx.100k'
-'''
+#train_file = '/tmp/jwpan/data_criteo/train.txt.train.thres20.yx'
+#test_file = '/tmp/jwpan/data_criteo/train.txt.validation.thres20.yx'
 
 # Yahoo CTR data set
 train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
 test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
-'''
 #train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm12.6.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
-'''
 
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
@@ -49,12 +45,13 @@ min_round = 1
 num_round = 1000
 early_stop_round = 2
 batch_size = 2000
-bb = 10
+#bb = 10
 round_no_improve = 5
 
 field_offsets = utils.FIELD_OFFSETS
 
 def train(model, name):
+    global batch_size, time_run, time_read, time_process
     history_score = []
     start_time = time.time()
     print 'epochs\tloss\ttrain-auc\teval-auc\ttime'
@@ -64,6 +61,21 @@ def train(model, name):
         if batch_size > 0:
             ls = []
             f = open(train_file, 'r')
+            lst_lines = []
+            for line in f:
+                if len(lst_lines) < batch_size:
+                    lst_lines.append(line)
+                else:
+                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1) # type of X_i, X_i[0], X_i[0][0] is list, tuple and np.ndarray respectively.
+                    _, l = model.run(fetches, X_i, y_i)
+                    ls.append(l)
+                    lst_lines = [line]
+            f.close()
+            if len(lst_lines) > 0:
+                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                _, l = model.run(fetches, X_i, y_i)
+                ls.append(l)
+            '''
             while True:
                 lines_gen = list(islice(f, batch_size * bb))
                 if not lines_gen:
@@ -72,17 +84,28 @@ def train(model, name):
                     X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)], name), 0, -1)
                     _, l = model.run(fetches, X_i, y_i)
                     ls.append(l)
+            '''
         elif batch_size == -1:
             pass
-            """
-            X_i, y_i = utils.slice(train_data)
-            _, l = model.run(fetches, X_i, y_i)
-            ls = [l]
-            """
         lst_train_pred = []
         lst_test_pred = []
         if batch_size > 0:
             f = open(train_file, 'r')
+            lst_lines = []
+            for line in f:
+                if len(lst_lines) < batch_size:
+                    lst_lines.append(line)
+                else:
+                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                    _train_preds = model.run(model.y_prob, X_i)
+                    lst_train_pred.append(_train_preds)
+                    lst_lines = [line]
+            f.close()
+            if len(lst_lines) > 0:
+                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                _train_preds = model.run(model.y_prob, X_i)
+                lst_train_pred.append(_train_preds)
+            '''
             while True:
                 lines_gen = list(islice(f, batch_size * bb))
                 if not lines_gen:
@@ -91,6 +114,7 @@ def train(model, name):
                     X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)], name), 0, -1)
                     _train_preds = model.run(model.y_prob, X_i)
                     lst_train_pred.append(_train_preds)
+            '''
             """
             for j in range(train_size / batch_size + 1):
                 X_i, y_i = utils.slice(train_data, j * batch_size, batch_size)
@@ -99,6 +123,21 @@ def train(model, name):
                 lst_train_pred.append(_train_preds)
             """
             f = open(test_file, 'r')
+            lst_lines = []
+            for line in f:
+                if len(lst_lines) < batch_size:
+                    lst_lines.append(line)
+                else:
+                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                    _test_preds = model.run(model.y_prob, X_i)
+                    lst_test_pred.append(_test_preds)
+                    lst_lines = [line]
+            f.close()
+            if len(lst_lines) > 0:
+                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                _test_preds = model.run(model.y_prob, X_i)
+                lst_test_pred.append(_test_preds)
+            '''
             while True:
                 lines_gen = list(islice(f, batch_size * bb))
                 if not lines_gen:
@@ -107,6 +146,7 @@ def train(model, name):
                     X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)], name), 0, -1)
                     _test_preds = model.run(model.y_prob, X_i)
                     lst_test_pred.append(_test_preds)
+            '''
             """
             for j in range(test_size / batch_size + 1):
                 X_i, y_i = utils.slice(test_data, j * batch_size, batch_size)
@@ -119,6 +159,9 @@ def train(model, name):
         train_score = roc_auc_score(train_label, train_preds)
         test_score = roc_auc_score(test_label, test_preds)
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+        sys.stdout.flush()
+        # Save the model to local files
+        '''
         path_model = 'model/' + str(name) + '_epoch_' + str(i)
         model.dump(path_model)
         d_label_score = {}
@@ -126,7 +169,7 @@ def train(model, name):
         d_label_score['score'] = test_preds
         #path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
         #pkl.dump(d_label_score, open(path_label_score, 'wb'))
-        sys.stdout.flush()
+        '''
         history_score.append(test_score)
         if i > min_round and i > early_stop_round:
             i_max = np.argmax(history_score)
@@ -179,13 +222,14 @@ def mapConf2Model(name):
 #for name in ['ffm_l2_v_0.000001', 'ffm_l2_v_0.0000001', 'ffm_l2_v_0.00000001']:
 #for name in ['ffm_l2_v_0.00001']:
 #for name in ['ffm_l2_v_1e-7_lr_1e-1', 'ffm_l2_v_1e-7_lr_1e-2', 'ffm_l2_v_1e-7_lr_1e-3', 'ffm_l2_v_1e-7_lr_1e-4', 'ffm_l2_v_1e-7_lr_1e-5', 'ffm_l2_v_1e-7_lr_1e-6']:
-#for name in ['fwfm_l2_v_1e-1', 'fwfm_l2_v_1e-2', 'fwfm_l2_v_1e-3', 'fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6', 'fwfm_l2_v_1e-7', 'fwfm_l2_v_1e-8']:
 #for name in ['lr_l2_1e-7', 'lr_l2_1e-8', 'lr_l2_1e-9']:
-#for name in ['fwfm_l2_v_1e-1', 'fwfm_l2_v_1e-2', 'fwfm_l2_v_1e-3', 'fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6', 'fwfm_l2_v_1e-7', 'fwfm_l2_v_1e-8']:
 #for name in ['ffm_l2_v_1e-1', 'ffm_l2_v_1e-2', 'ffm_l2_v_1e-3', 'ffm_l2_v_1e-4', 'ffm_l2_v_1e-5', 'ffm_l2_v_1e-6', 'ffm_l2_v_1e-7', 'ffm_l2_v_1e-8']:
 #for name in ['lr_l2_1e-1', 'lr_l2_1e-2', 'lr_l2_1e-3', 'lr_l2_1e-4', 'lr_l2_1e-5', 'lr_l2_1e-6', 'lr_l2_1e-7', 'lr_l2_1e-8']:
 #for name in ['fm_l2_v_1e-1', 'fm_l2_v_1e-2', 'fm_l2_v_1e-3', 'fm_l2_v_1e-4', 'fm_l2_v_1e-5', 'fm_l2_v_1e-6', 'fm_l2_v_1e-7', 'fm_l2_v_1e-8']:
-for name in ['ffm_l2_v_1e-7_lr_1e-4']:
+#for name in ['ffm_l2_v_1e-7_lr_1e-4']:
+#for name in ['fwfm_l2_v_1e-1', 'fwfm_l2_v_1e-2', 'fwfm_l2_v_1e-3', 'fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6', 'fwfm_l2_v_1e-7', 'fwfm_l2_v_1e-8']:
+#for name in ['lr_l2_1e-7_lr_1e-5', 'lr_l2_1e-7_lr_1e-6', 'lr_l2_1e-7_lr_1e-7', 'lr_l2_1e-7_lr_1e-8']:
+for name in ['fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6', 'fwfm_l2_v_1e-7', 'fwfm_l2_v_1e-8']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
