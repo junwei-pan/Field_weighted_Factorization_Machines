@@ -38,10 +38,10 @@ path_test = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
 '''
 
 # Criteo CTR data set.
-path_train = '../data_cretio/train.txt.train.100k'
-path_validation = '../data_cretio/train.txt.validation.100k'
-path_test = '../data_cretio/train.txt.test.100k'
-path_fea_index = '../data_cretio/featindex_thres20.txt'
+path_train = '/tmp/jwpan/data_cretio/train.txt.train.100k'
+path_validation = '/tmp/jwpan/data_cretio/train.txt.validation.100k'
+path_test = '/tmp/jwpan/data_cretio/train.txt.test.100k'
+path_fea_index = '/tmp/jwpan/data_cretio/featindex_thres20.txt'
 
 batch = 100000
 
@@ -201,7 +201,7 @@ build_field_feature(path_train, 'train')
 
 for k in range(1, 10):
     suffix = str(round(d / (10.0 / k), 2))
-    path_fea_ffm_index = '../data_cretio/featindex_ffm'+ suffix +'_thres' + str(thres) + '.txt'
+    path_fea_ffm_index = '/tmp/jwpan/data_cretio/featindex_ffm'+ suffix +'_thres' + str(thres) + '.txt'
 
     print 'create fea index'
     #create_fea_index(path_fea_index)
