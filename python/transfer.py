@@ -8,19 +8,20 @@ This script will do the following tasks:
 '''
 
 # Configuration for Criteo data set
+'''
 index_label = 0
 index_cat_start = 14
 num_fields = 26
 lst_index_cat = range(index_cat_start, index_cat_start + num_fields)
 thres = 20
+'''
 
 # Configuration for Yahoo data set
-'''
 index_label = 28
+index_cat_start = 0
 num_fields = 15
-lst_index_cat = range(num_fields)
+lst_index_cat = range(index_cat_start, index_cat_start + num_fields)
 thres = 10
-'''
 
 print "Index of label", index_label
 print "List of indexes of categorical features", lst_index_cat
@@ -30,26 +31,31 @@ print "Threshold", thres
 d_field_fea = {}
 d_fea_index = {}
 d_field_fea_cnt = {}
-# Yahoo CTR data set.
+# Criteo CTR data set.
 '''
-path_train = '../data_yahoo/ctr_20170517_0530_0.015.txt'
-path_validation = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
-path_test = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1'
+dir = '../data_cretio'
+path_train = '../data_cretio/train.txt.train'
+path_validation = '../data_cretio/train.txt.validation'
+path_test = '../data_cretio/train.txt.test'
+path_fea_index = '../data_cretio/featindex_thres20.txt'
 '''
 
-# Criteo CTR data set.
-path_train = '/tmp/jwpan/data_cretio/train.txt.train.100k'
-path_validation = '/tmp/jwpan/data_cretio/train.txt.validation.100k'
-path_test = '/tmp/jwpan/data_cretio/train.txt.test.100k'
-path_fea_index = '/tmp/jwpan/data_cretio/featindex_thres20.txt'
+# Yahoo CTR data set.
+dir = '../data_yahoo/dataset2'
+path_train = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt'
+path_validation = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1'
+path_test = '../data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1'
+
 
 batch = 100000
 
 def get_lines_of_file(path):
     n = 0
-    for i in open(path):
-        n += 1
-    return n
+    with open(path) as f:
+        for i in open(path):
+            n += 1
+        return n
+    f.close()
 
 def build_field_feature(path, mode):
     '''
@@ -194,14 +200,15 @@ def create_yx(path, mode, model='fm', d=14, k=2):
     file.close()
 
 # To generate several data sets for FFM with different hashing space.
-d = 26 - 1
+d = num_fields - 1
 
 print 'build field feature'
 build_field_feature(path_train, 'train')
 
-for k in range(1, 10):
+for k in [2, 4]:
+    print '### ===> %d <===' % k
     suffix = str(round(d / (10.0 / k), 2))
-    path_fea_ffm_index = '/tmp/jwpan/data_cretio/featindex_ffm'+ suffix +'_thres' + str(thres) + '.txt'
+    path_fea_ffm_index = dir + '/featindex_ffm'+ suffix +'_thres' + str(thres) + '.txt'
 
     print 'create fea index'
     #create_fea_index(path_fea_index)
