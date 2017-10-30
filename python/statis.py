@@ -159,30 +159,28 @@ def load_list(path):
         lst.append(float(line.strip('\n')))
     return lst
 
-def main_field_interaction():
 
-    statis = statis()
-    #print 'load feature index'
-    #sys.stdout.flush()
-    #statis.load_feature_index('../data_yahoo/dataset2/featindex_25m_thres10.txt')
-    print 'load data'
-    sys.stdout.flush()
-    #statis.load_data('../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx')
-    statis.load_data('../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.downsample_all.0.05')
-    print 'load model'
-    sys.stdout.flush()
-    #statis.load_model('/homes/jwpan/Github/product-nets/python/model/fm_epoch_1', 'fm')
-    #statis.load_model('model/yahoo_dataset2.2_fwfm_epoch_2', 'fwfm')
-    statis.load_model('model/ffm_l2_v_1e-7_lr_1e-4_yahoo_epoch_2', 'ffm')
-    for fi in range(15):
-        for fj in range(fi+1, 15):
-            res = statis.average_latent_vector_dot_product_for_field_pair(fi, fj, 'ffm')
-            print "%f\t%f\t%f\t%f" % (res[0], res[1], res[2], res[3])
-            sys.stdout.flush()
-            #res = statis.mutual_information(fi, fj)
-            #print res
-            #res = statis.get_field_pair_pearson_corr_with_label(i,j)
-            #print '%d\t%d\t%f\t%f' % (i, j, res[0], res[1])
+statis = statis()
+#print 'load feature index'
+#sys.stdout.flush()
+#statis.load_feature_index('../data_yahoo/dataset2/featindex_25m_thres10.txt')
+print 'load data'
+sys.stdout.flush()
+#statis.load_data('../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx')
+statis.load_data('../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.downsample_all.0.05')
+print 'load model'
+sys.stdout.flush()
+statis.load_model('model/yahoo_dataset2.2_fwfm_epoch_2', 'fwfm')
+#statis.load_model('model/ffm_l2_v_1e-7_lr_1e-4_yahoo_epoch_2', 'ffm')
+for fi in range(15):
+    for fj in range(fi+1, 15):
+        res = statis.average_latent_vector_dot_product_for_field_pair(fi, fj, 'fwfm')
+        print "%f\t%f\t%f\t%f" % (res[0], res[1], res[2], res[3])
+        sys.stdout.flush()
+        #res = statis.mutual_information(fi, fj)
+        #print res
+        #res = statis.get_field_pair_pearson_corr_with_label(i,j)
+        #print '%d\t%d\t%f\t%f' % (i, j, res[0], res[1])
 
 def main_kendalltau():
     path_mi = 'data/yahoo_mi'
@@ -200,4 +198,4 @@ def main_kendalltau():
     print 'mi v.s fwfm'
     print kendalltau(x_mi, x_fwfm)
 
-main_kendalltau()
+#main_kendalltau()

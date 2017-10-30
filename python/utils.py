@@ -14,7 +14,7 @@ d_name_conf = {}
 #with open('../data_yahoo/featindex_25m_thres10.txt') as fin:
 #path_feature_index = '/tmp/jwpan/data_criteo/featindex_thres20.txt'
 #path_feature_index = '/tmp/jwpan/data_criteo/featindex_ffm10.0_thres20.txt'
-path_feature_index = '/tmp/jwpan/data_yahoo/dataset2/featindex_25m_thres10.txt'
+path_feature_index = '../data_yahoo/dataset2/featindex_25m_thres10.txt'
 #path_feature_index = '/tmp/jwpan/data_yahoo/dataset2/featindex_ffm2.8_thres10.txt'
 with open(path_feature_index) as fin:
     for line in fin:
