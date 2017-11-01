@@ -159,7 +159,29 @@ def load_list(path):
         lst.append(float(line.strip('\n')))
     return lst
 
+def statis_n_feature(path):
+    set_fea = set([])
+    for line in open(path):
+        lst = [x.split(':')[0] for x in line.strip('\n').split(' ')[1:]]
+        for x in lst:
+            set_fea.add(x)
+    print len(set_fea)
+'''
+path1 = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
+statis_n_feature(path1)
+path2 = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+statis_n_feature(path2)
+path3 = '../data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
+statis_n_feature(path3)
+path1 = '../data_cretio/train.txt.train.thres20.yx'
+statis_n_feature(path1)
+path2 = '../data_cretio/train.txt.validation.thres20.yx'
+statis_n_feature(path2)
+path3 = '../data_cretio/train.txt.test.thres20.yx'
+statis_n_feature(path3)
+'''
 
+'''
 statis = statis()
 #print 'load feature index'
 #sys.stdout.flush()
@@ -181,21 +203,30 @@ for fi in range(15):
         #print res
         #res = statis.get_field_pair_pearson_corr_with_label(i,j)
         #print '%d\t%d\t%f\t%f' % (i, j, res[0], res[1])
+'''
 
 def main_kendalltau():
     path_mi = 'data/yahoo_mi'
     path_fm = 'data/yahoo_fm'
     path_ffm = 'data/yahoo_ffm'
     path_fwfm = 'data/yahoo_fwfm'
+    path_r = 'data/yahoo_abs_r'
+    path_fwfm_without_r = 'data/yahoo_fwfm_without_r'
     x_mi = load_list(path_mi)
     x_fm = load_list(path_fm)
     x_ffm = load_list(path_ffm)
     x_fwfm = load_list(path_fwfm)
+    x_r = load_list(path_r)
+    x_fwfm_without_r = load_list(path_fwfm_without_r)
     print 'mi v.s fm'
-    print kendalltau(x_mi, x_fm)
+    print pearsonr(x_mi, x_fm)
     print 'mi v.s ffm'
-    print kendalltau(x_mi, x_ffm)
+    print pearsonr(x_mi, x_ffm)
     print 'mi v.s fwfm'
-    print kendalltau(x_mi, x_fwfm)
+    print pearsonr(x_mi, x_fwfm)
+    print 'mi v.s r'
+    print pearsonr(x_mi, x_r)
+    print 'mi v.s fwfm_without_r'
+    print pearsonr(x_mi, x_fwfm_without_r)
 
-#main_kendalltau()
+main_kendalltau()
