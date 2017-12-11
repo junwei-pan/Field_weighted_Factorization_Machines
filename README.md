@@ -44,7 +44,7 @@ layer activation: tanh, none
 layer l2 norm: 0
 
 |Model|Train Loss|Train AUC|Test AUC|
-|---|---|---|---|---|
+|---|---|---|---|
 |IPNN|0.474942|0.770333|0.764046|
 |OPNN|0.466014|0.783711|0.771107|
 |FwFM|0.462722|0.794266|0.775696|
