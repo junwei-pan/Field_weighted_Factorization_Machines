@@ -9,9 +9,6 @@ DTYPE = tf.float64
 
 FIELD_SIZES = [0] * 15
 d_name_conf = {}
-#with open('../data_yahoo/dataset2/featindex_thres10.txt') as fin:
-#with open('../data_cretio/featindex_thres20.txt') as fin:
-#with open('../data_yahoo/featindex_25m_thres10.txt') as fin:
 #path_feature_index = '/tmp/jwpan/data_criteo/featindex_thres20.txt'
 #path_feature_index = '/tmp/jwpan/data_criteo/featindex_ffm10.0_thres20.txt'
 path_feature_index = '../data_yahoo/dataset2/featindex_25m_thres10.txt'

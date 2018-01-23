@@ -167,6 +167,36 @@ d_name_conf['fwfm_l2_v_1e-5_lr_1e-3'] = {
         'r': 0.0
     }
 }
+d_name_conf['fwfm_l2_v_1e-5_lr_5e-4'] = {
+    'layer_sizes': [field_sizes, 10, 1],
+    'layer_acts': ['none', 'none'],
+    'layer_keeps': [1, 1],
+    'opt_algo': 'adam',
+    'learning_rate': 0.0005,
+    'layer_l2': [0, 0],
+    'kernel_l2': 0,
+    'random_seed': 0,
+    'l2_dict': {
+        'linear_w': 0.0,
+        'v': 0.00001,
+        'r': 0.0
+    }
+}
+d_name_conf['fwfm_l2_v_1e-5_lr_5e-5'] = {
+    'layer_sizes': [field_sizes, 10, 1],
+    'layer_acts': ['none', 'none'],
+    'layer_keeps': [1, 1],
+    'opt_algo': 'adam',
+    'learning_rate': 0.00005,
+    'layer_l2': [0, 0],
+    'kernel_l2': 0,
+    'random_seed': 0,
+    'l2_dict': {
+        'linear_w': 0.0,
+        'v': 0.00001,
+        'r': 0.0
+    }
+}
 d_name_conf['fwfm_l2_v_1e-5_lr_1e-5'] = {
     'layer_sizes': [field_sizes, 10, 1],
     'layer_acts': ['none', 'none'],

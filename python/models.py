@@ -840,7 +840,7 @@ class FwFM_LE:
             # w0 store the embeddings for all features.
             init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
             #init_vars.append(('w_l', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
-            init_vars.append(('w_l_v_all_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
+            init_vars.append(('w_l_v_all_%d' % i, [layer_input, 1], 'tnormal', dtype))
             init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
         #init_vars.append(('w_l', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
         init_vars.append(('w_p', [num_inputs * (num_inputs-1)/2, layer_sizes[2]], 'tnormal', dtype))
@@ -865,8 +865,9 @@ class FwFM_LE:
             # Multiply SparseTensor X[i] by dense matrix w0[i]
             xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs)]
             w_l_v = [tf.sparse_tensor_dense_matmul(self.X[i], w_l_v_all[i]) for i in range(num_inputs)]
-            w_l_v = tf.reshape(w_l_v, [-1, num_inputs * factor_order, layer_sizes[2]])
+            #w_l_v = tf.reshape(w_l_v, [num_inputs * factor_order, layer_sizes[2]])
             with tf.device(gpu_device):
+                w_l_v = tf.reshape(w_l_v, [-1, num_inputs])
                 if has_field_bias:
                     x = tf.concat([xw[i] + b0[i] for i in range(num_inputs)], 1)
                 else:
@@ -895,10 +896,6 @@ class FwFM_LE:
                 l_right = tf.gather(l_trans, index_right)
                 p = tf.transpose(tf.multiply(l_left, l_right), [1, 0, 2])
                 p = tf.reduce_sum(p, 2)
-                print 'l_trans', l_trans.shape
-                print 'l_left', l_left.shape
-                print 'l_right', l_right.shape
-                print 'p', p.shape
                 p = tf.nn.dropout(
                     utils.activate(
                         tf.matmul(
@@ -910,7 +907,7 @@ class FwFM_LE:
                 )
 
                 l = utils.activate(
-                        tf.matmul(l, w_l_v) + b1 + p,
+                        tf.reduce_sum(w_l_v, 1, keep_dims=True) + b1 + p,
                         #tf.matmul(l, w_l) + b1 + p,
                         layer_acts[1])
 
@@ -934,12 +931,13 @@ class FwFM_LE:
                     if l2_dict.has_key('r'):
                         self.loss += l2_dict['r'] * tf.nn.l2_loss(w_p)
                     if l2_dict.has_key('v'):
+                        self.loss += l2_dict['v'] * tf.nn.l2_loss(w_l_v)
                         for i in range(num_inputs):
                             self.loss += l2_dict['v'] * tf.nn.l2_loss(self.vars['w0_%d' % i])
 
                 self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
 
-            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=T)
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
             config.gpu_options.allow_growth = True
             config.log_device_placement=False
             self.sess = tf.Session(config=config)

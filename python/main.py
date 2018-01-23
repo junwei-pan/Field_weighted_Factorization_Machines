@@ -12,25 +12,27 @@ from conf.conf_fwfm import *
 from conf.conf_ffm import *
 from conf.conf_lr import *
 from conf.conf_fm import *
+from conf.conf_fwfmoh import *
 
 import utils
-from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM, FwFM_LE
 
 # Criteo CTR data set
 #train_file = '/tmp/jwpan/data_criteo/train.txt.train.thres20.yx'
 #test_file = '/tmp/jwpan/data_criteo/train.txt.validation.thres20.yx'
 #test_file = '/tmp/jwpan/data_criteo/train.txt.test.thres20.yx'
 #train_file = '/tmp/jwpan/data_criteo/train.txt.train.thres20.ffm10.0.yx'
-#test_file = '/tmp/jwpan/data_criteo/train.txt.validation.thres20.ffm10.0.yx'
+#test_file = '/tmp/jwpan/data_criteo/train.txt.test.thres20.ffm10.0.yx'
 
 # Yahoo CTR data set
 train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
+test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
 #train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm2.8.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.ffm2.8.yx'
 #train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm12.6.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
-test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
+#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
 
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
@@ -48,7 +50,7 @@ num_feas = len(utils.FIELD_SIZES)
 
 min_round = 1
 num_round = 1000
-early_stop_round = 5
+early_stop_round = 2
 batch_size = 2000
 #bb = 10
 round_no_improve = 5
@@ -175,6 +177,9 @@ def train(model, name):
         #path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
         #pkl.dump(d_label_score, open(path_label_score, 'wb'))
         '''
+        if i == 12:
+            break
+        '''
         history_score.append(test_score)
         if i > min_round and i > early_stop_round:
             i_max = np.argmax(history_score)
@@ -184,14 +189,13 @@ def train(model, name):
                     np.argmax(history_score), np.max(history_score))
                 sys.stdout.flush()
                 break
-            '''
             # No improvement for round_no_improve rounds
             elif history_score[-1] - history_score[max(-1 * round_no_improve, -1 * len(history_score))] < 1e-4:
                 print 'no improvement for %d rounds. \nbest iteration:\n[%d]\teval-auc: %f' % (
                     round_no_improve, np.argmax(history_score), np.max(history_score))
                 sys.stdout.flush()
                 break
-            '''
+        '''
 
 def mapConf2Model(name):
     conf = d_name_conf[name]
@@ -204,6 +208,8 @@ def mapConf2Model(name):
         return FM(**conf)
     elif model_name == 'lr':
         return LR(**conf)
+    elif model_name == 'fwfmoh':
+        return FwFM_LE(**conf)
 
 #for name in ['ffm_l2_v_1e-7_lr_1e-1', 'ffm_l2_v_1e-7_lr_1e-2', 'ffm_l2_v_1e-7_lr_1e-3', 'ffm_l2_v_1e-7_lr_1e-4', 'ffm_l2_v_1e-7_lr_1e-5', 'ffm_l2_v_1e-7_lr_1e-6']:
 #for name in ['lr_l2_1e-7', 'lr_l2_1e-8', 'lr_l2_1e-9']:
@@ -217,8 +223,8 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-5_lr_1e-7']:
 #for name in ['fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6', 'fwfm_l2_v_1e-7', 'fwfm_l2_v_1e-8']:
 #for name in ['fwfm_l2_v_1e-6']:
-#for name in ['ffm_l2_v_1e-7_lr_1e-4']:
-for name in ['fwfm_l2_v_1e-6']:
+#for name in ['fwfm_l2_v_1e-5']:
+for name in ['fm_l2_v_1e-6']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
