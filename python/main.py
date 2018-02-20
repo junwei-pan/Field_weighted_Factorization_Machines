@@ -25,8 +25,8 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #test_file = '/tmp/jwpan/data_criteo/train.txt.test.thres20.ffm10.0.yx'
 
 # Yahoo CTR data set
-train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
-test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
+train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.100k'
+test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100k'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
 #train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm2.8.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.ffm2.8.yx'
@@ -58,6 +58,7 @@ round_no_improve = 5
 field_offsets = utils.FIELD_OFFSETS
 
 def train(model, name):
+    builder = tf.saved_model.builder.SavedModelBuilder('model')
     global batch_size, time_run, time_read, time_process
     history_score = []
     start_time = time.time()
@@ -104,6 +105,7 @@ def train(model, name):
                     lst_lines.append(line)
                 else:
                     X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                    print 'X_i', type(X_i)
                     _train_preds = model.run(model.y_prob, X_i)
                     lst_train_pred.append(_train_preds)
                     lst_lines = [line]
@@ -167,6 +169,20 @@ def train(model, name):
         test_score = roc_auc_score(test_label, test_preds)
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
         sys.stdout.flush()
+        if i == 0:
+            print "save!"
+            #print type(model.X[0])
+            #print model.X[0].name
+            print model.y_prob.name
+            builder.add_meta_graph_and_variables(
+                model.sess, 
+                [tf.saved_model.tag_constants.SERVING],
+                signature_def_map = {
+                    "model": tf.saved_model.signature_def_utils.predict_signature_def(
+                        inputs = {"x": model.X[0]}, 
+                        outputs = {"y": model.y_prob})
+                    })
+            builder.save()
         # Save the model to local files
         #path_model = 'model/' + str(name) + '_epoch_' + str(i)
         #model.dump(path_model)
@@ -223,8 +239,8 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-5_lr_1e-7']:
 #for name in ['fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6', 'fwfm_l2_v_1e-7', 'fwfm_l2_v_1e-8']:
 #for name in ['fwfm_l2_v_1e-6']:
-#for name in ['fwfm_l2_v_1e-5']:
-for name in ['fm_l2_v_1e-6']:
+#for name in ['fm_l2_v_1e-6']:
+for name in ['fwfm_l2_v_1e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)

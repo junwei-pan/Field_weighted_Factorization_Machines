@@ -721,7 +721,7 @@ class FwFM:
             with tf.device(gpu_device):
                 if random_seed is not None:
                     tf.set_random_seed(random_seed)
-                self.X = [tf.sparse_placeholder(dtype) for i in range(num_inputs)]
+                self.X = [tf.sparse_placeholder(dtype, name='x' + str(i)) for i in range(num_inputs)]
                 self.y = tf.placeholder(dtype)
                 self.vars = utils.init_var_map(init_vars, init_path)
                 w0 = [self.vars['w0_%d' % i] for i in range(num_inputs)]
@@ -782,7 +782,7 @@ class FwFM:
                             layer_acts[i]),
                         layer_keeps[i])
 
-                self.y_prob = tf.sigmoid(l)
+                self.y_prob = tf.sigmoid(l, name='y')
 
                 self.loss = tf.reduce_mean(
                     tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))

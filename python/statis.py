@@ -166,7 +166,6 @@ def statis_n_feature(path):
         for x in lst:
             set_fea.add(x)
     print len(set_fea)
-'''
 path1 = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
 statis_n_feature(path1)
 path2 = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
@@ -179,7 +178,6 @@ path2 = '../data_cretio/train.txt.validation.thres20.yx'
 statis_n_feature(path2)
 path3 = '../data_cretio/train.txt.test.thres20.yx'
 statis_n_feature(path3)
-'''
 
 '''
 statis = statis()
@@ -204,7 +202,7 @@ for fi in range(15):
         #res = statis.get_field_pair_pearson_corr_with_label(i,j)
         #print '%d\t%d\t%f\t%f' % (i, j, res[0], res[1])
 '''
-
+'''
 def main_kendalltau():
     path_mi = 'data/yahoo_mi'
     path_fm = 'data/yahoo_fm'
@@ -230,3 +228,4 @@ def main_kendalltau():
     print pearsonr(x_mi, x_fwfm_without_r)
 
 main_kendalltau()
+'''
