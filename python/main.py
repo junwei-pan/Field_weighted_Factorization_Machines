@@ -12,7 +12,7 @@ from conf.conf_fwfm import *
 from conf.conf_ffm import *
 from conf.conf_lr import *
 from conf.conf_fm import *
-from conf.conf_fwfmoh import *
+#from conf.conf_fwfmoh import *
 
 import utils
 from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM, FwFM_LE
@@ -25,8 +25,8 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #test_file = '/tmp/jwpan/data_criteo/train.txt.test.thres20.ffm10.0.yx'
 
 # Yahoo CTR data set
-train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.100k'
-test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100k'
+train_file = '../data_yahoo/ctr_20170517_0530_0.015.txt.thres10.yx.100k'
+test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100k'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
 #train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm2.8.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.ffm2.8.yx'
@@ -83,16 +83,6 @@ def train(model, name):
                 X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
                 _, l = model.run(fetches, X_i, y_i)
                 ls.append(l)
-            '''
-            while True:
-                lines_gen = list(islice(f, batch_size * bb))
-                if not lines_gen:
-                    break
-                for ib in range(bb):
-                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)], name), 0, -1)
-                    _, l = model.run(fetches, X_i, y_i)
-                    ls.append(l)
-            '''
         elif batch_size == -1:
             pass
         lst_train_pred = []
@@ -105,7 +95,6 @@ def train(model, name):
                     lst_lines.append(line)
                 else:
                     X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
-                    print 'X_i', type(X_i)
                     _train_preds = model.run(model.y_prob, X_i)
                     lst_train_pred.append(_train_preds)
                     lst_lines = [line]
@@ -114,23 +103,6 @@ def train(model, name):
                 X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
                 _train_preds = model.run(model.y_prob, X_i)
                 lst_train_pred.append(_train_preds)
-            '''
-            while True:
-                lines_gen = list(islice(f, batch_size * bb))
-                if not lines_gen:
-                    break
-                for ib in range(bb):
-                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)], name), 0, -1)
-                    _train_preds = model.run(model.y_prob, X_i)
-                    lst_train_pred.append(_train_preds)
-            '''
-            """
-            for j in range(train_size / batch_size + 1):
-                X_i, y_i = utils.slice(train_data, j * batch_size, batch_size)
-                #X_i = utils.libsvm_2_coo(X_i, (len(X_i), input_dim)).tocsr()
-                _train_preds = model.run(model.y_prob, X_i)
-                lst_train_pred.append(_train_preds)
-            """
             f = open(test_file, 'r')
             lst_lines = []
             for line in f:
@@ -146,23 +118,6 @@ def train(model, name):
                 X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
                 _test_preds = model.run(model.y_prob, X_i)
                 lst_test_pred.append(_test_preds)
-            '''
-            while True:
-                lines_gen = list(islice(f, batch_size * bb))
-                if not lines_gen:
-                    break
-                for ib in range(bb):
-                    X_i, y_i = utils.slice(utils.process_lines(lines_gen[batch_size * ib : batch_size * (ib+1)], name), 0, -1)
-                    _test_preds = model.run(model.y_prob, X_i)
-                    lst_test_pred.append(_test_preds)
-            '''
-            """
-            for j in range(test_size / batch_size + 1):
-                X_i, y_i = utils.slice(test_data, j * batch_size, batch_size)
-                #X_i = utils.libsvm_2_coo(X_i, (len(X_i), input_dim)).tocsr()
-                _test_preds = model.run(model.y_prob, X_i)
-                lst_test_pred.append(_test_preds)
-            """
         train_preds = np.concatenate(lst_train_pred)
         test_preds = np.concatenate(lst_test_pred)
         train_score = roc_auc_score(train_label, train_preds)
@@ -170,48 +125,24 @@ def train(model, name):
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
         sys.stdout.flush()
         if i == 0:
+            map = {}
+            for i in range(15):
+                map["field_" + str(i) + "_indices"] = model.X[i].indices
+                map["field_" + str(i) + "_values"] = model.X[i].values
+                map["field_" + str(i) + "_dense_shape"] = model.X[i].dense_shape
             print "save!"
-            #print type(model.X[0])
-            #print model.X[0].name
             print model.y_prob.name
             builder.add_meta_graph_and_variables(
                 model.sess, 
                 [tf.saved_model.tag_constants.SERVING],
                 signature_def_map = {
                     "model": tf.saved_model.signature_def_utils.predict_signature_def(
-                        inputs = {"x": model.X[0]}, 
+                        inputs = map,
                         outputs = {"y": model.y_prob})
                     })
             builder.save()
-        # Save the model to local files
-        #path_model = 'model/' + str(name) + '_epoch_' + str(i)
-        #model.dump(path_model)
-        '''
-        d_label_score = {}
-        d_label_score['label'] = test_label
-        d_label_score['score'] = test_preds
-        #path_label_score = 'model/label_score_' + str(name) + '_epoch_' + str(i)
-        #pkl.dump(d_label_score, open(path_label_score, 'wb'))
-        '''
         if i == 12:
             break
-        '''
-        history_score.append(test_score)
-        if i > min_round and i > early_stop_round:
-            i_max = np.argmax(history_score)
-            # Early stop
-            if i - i_max >= early_stop_round:
-                print 'early stop\nbest iteration:\n[%d]\teval-auc: %f' % (
-                    np.argmax(history_score), np.max(history_score))
-                sys.stdout.flush()
-                break
-            # No improvement for round_no_improve rounds
-            elif history_score[-1] - history_score[max(-1 * round_no_improve, -1 * len(history_score))] < 1e-4:
-                print 'no improvement for %d rounds. \nbest iteration:\n[%d]\teval-auc: %f' % (
-                    round_no_improve, np.argmax(history_score), np.max(history_score))
-                sys.stdout.flush()
-                break
-        '''
 
 def mapConf2Model(name):
     conf = d_name_conf[name]
