@@ -9,26 +9,26 @@ DTYPE = tf.float32
 
 FIELD_SIZES = [0] * 15
 d_name_conf = {}
-#path_feature_index = '/tmp/jwpan/data_criteo/featindex_thres20.txt'
-#path_feature_index = '/tmp/jwpan/data_criteo/featindex_ffm10.0_thres20.txt'
-path_feature_index = '../data_yahoo/featindex_25m_thres10.txt'
-#path_feature_index = '/tmp/jwpan/data_yahoo/dataset2/featindex_ffm2.8_thres10.txt'
-with open(path_feature_index) as fin:
-    for line in fin:
-        line = line.strip().split(':')
-        if len(line) > 1:
-            f = int(line[0])
-            FIELD_SIZES[f] += 1
-print 'field sizes:', FIELD_SIZES
-FIELD_OFFSETS = [sum(FIELD_SIZES[:i]) for i in range(len(FIELD_SIZES))]
-INPUT_DIM = sum(FIELD_SIZES)
+FIELD_OFFSETS = []
+INPUT_DIM = 0
 OUTPUT_DIM = 1
 STDDEV = 1e-3
 MINVAL = -1e-2
 MAXVAL = 1e-2
+#path_feature_index = '/Users/jwpan/Github/DL_for_Multifield_Categorical_Data/data_yahoo/featindex_25m_thres10.txt'
 
+def initiate(path):
+    with open(path) as fin:
+        for line in fin:
+            line = line.strip().split(':')
+            if len(line) > 1:
+                f = int(line[0])
+                FIELD_SIZES[f] += 1
+    FIELD_OFFSETS = [sum(FIELD_SIZES[:i]) for i in range(len(FIELD_SIZES))]
+    INPUT_DIM = sum(FIELD_SIZES)
+    return INPUT_DIM, FIELD_OFFSETS
 
-def process_lines(lines, name):
+def process_lines(lines, name, INPUT_DIM, FIELD_OFFSETS):
     model = name.split('_')[0]
     X = []
     y = []
@@ -39,13 +39,14 @@ def process_lines(lines, name):
         y.append(y_i)
         X.append(X_i)
     y = np.reshape(np.array(y), (-1, 1))
+    
     X = libsvm_2_coo(X, (len(X), INPUT_DIM)).tocsr()
     if model in set(['lr', 'fm']):
         return X, y
     else:
-        return split_data((X, y))
+        return split_data((X, y), FIELD_OFFSETS)
 
-def read_data(file_name):
+def read_data(file_name, read_data):
     X = []
     y = []
     with open(file_name) as fin:
@@ -129,7 +130,7 @@ def slice(csr_data, start=0, size=-1):
     return csr_2_input(slc_data), slc_labels
 
 
-def split_data(data):
+def split_data(data, FIELD_OFFSETS):
     fields = []
     for i in range(len(FIELD_OFFSETS) - 1):
         start_ind = FIELD_OFFSETS[i]

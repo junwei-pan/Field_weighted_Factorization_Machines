@@ -1,5 +1,7 @@
 import time 
 import sys
+import os
+import shutil
 import json
 from sklearn.metrics import roc_auc_score
 from scipy.sparse import coo_matrix
@@ -25,8 +27,10 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #test_file = '/tmp/jwpan/data_criteo/train.txt.test.thres20.ffm10.0.yx'
 
 # Yahoo CTR data set
-train_file = '../data_yahoo/ctr_20170517_0530_0.015.txt.thres10.yx.100k'
-test_file = '../data_yahoo/ctr_20170531.txt.downsample_all.0.1.thres10.yx.100k'
+train_file = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.10k'
+test_file = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx.10k'
+#train_file = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
+#test_file = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
 #train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm2.8.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.ffm2.8.yx'
@@ -39,7 +43,11 @@ print "train_file: ", train_file
 print "test_file: ", test_file
 sys.stdout.flush()
 
-input_dim = utils.INPUT_DIM
+path_feature_map = '../data_yahoo/dataset2/featindex_25m_thres10.txt'
+path_saved_model = 'model'
+if os.path.exists(path_saved_model) and os.path.isdir(path_saved_model):
+    shutil.rmtree(path_saved_model)
+INPUT_DIM, FIELD_OFFSETS = utils.initiate(path_feature_map)
 
 train_label = utils.read_label(train_file)
 test_label = utils.read_label(test_file)
@@ -74,13 +82,13 @@ def train(model, name):
                 if len(lst_lines) < batch_size:
                     lst_lines.append(line)
                 else:
-                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1) # type of X_i, X_i[0], X_i[0][0] is list, tuple and np.ndarray respectively.
+                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1) # type of X_i, X_i[0], X_i[0][0] is list, tuple and np.ndarray respectively.
                     _, l = model.run(fetches, X_i, y_i)
                     ls.append(l)
                     lst_lines = [line]
             f.close()
             if len(lst_lines) > 0:
-                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                 _, l = model.run(fetches, X_i, y_i)
                 ls.append(l)
         elif batch_size == -1:
@@ -94,13 +102,13 @@ def train(model, name):
                 if len(lst_lines) < batch_size:
                     lst_lines.append(line)
                 else:
-                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                     _train_preds = model.run(model.y_prob, X_i)
                     lst_train_pred.append(_train_preds)
                     lst_lines = [line]
             f.close()
             if len(lst_lines) > 0:
-                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                 _train_preds = model.run(model.y_prob, X_i)
                 lst_train_pred.append(_train_preds)
             f = open(test_file, 'r')
@@ -109,13 +117,13 @@ def train(model, name):
                 if len(lst_lines) < batch_size:
                     lst_lines.append(line)
                 else:
-                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                     _test_preds = model.run(model.y_prob, X_i)
                     lst_test_pred.append(_test_preds)
                     lst_lines = [line]
             f.close()
             if len(lst_lines) > 0:
-                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name), 0, -1)
+                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                 _test_preds = model.run(model.y_prob, X_i)
                 lst_test_pred.append(_test_preds)
         train_preds = np.concatenate(lst_train_pred)
