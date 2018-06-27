@@ -702,7 +702,7 @@ class FwFM:
         num_inputs = len(layer_sizes[0]) # Number of fields, i.e., M
         factor_order = layer_sizes[1]
         for i in range(num_inputs):
-            layer_input = layer_sizes[0][i]
+            layer_input = layer_sizes[0][i] # Number of unique features for field i
             layer_output = factor_order
             # w0 store the embeddings for all features.
             init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
@@ -769,6 +769,8 @@ class FwFM:
                     layer_keeps[1]
                 )
 
+                print 'p.get_shape()', p.get_shape()
+
                 l = utils.activate(
                         tf.matmul(l, w_l) + b1 + p,
                         layer_acts[1])
@@ -783,7 +785,6 @@ class FwFM:
                         layer_keeps[i])
 
                 self.y_prob = tf.sigmoid(l, name='y')
-
                 self.loss = tf.reduce_mean(
                     tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))
                 # l2 regularization for the linear weights, embeddings and r
@@ -819,6 +820,146 @@ class FwFM:
             var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
+
+class MultiTask_FwFM:
+    def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None, int_path=None,
+                 opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=False, l2_dict=None,
+                 num_lines=None, index_lines=None):
+        """
+        :param layer_sizes: [num_fields, factor_layer, l_p size]
+        :param layer_acts:
+        :param layer_keeps:
+        :param int_path:
+        :param opt_algo:
+        :param learning_rate:
+        :param random_seed:
+        :param has_field_bias:
+        :param l2_dict:
+        """
+
+        print 'num_lines', num_lines
+        init_vars = []
+        num_inputs = len(layer_sizes[0])-1 # Here we minus one to exclude line_id as a feature
+        factor_order = layer_sizes[1]
+        # Parameters initialization
+        for i in range(num_inputs+1):
+            layer_input = layer_sizes[0][i]
+            layer_output = factor_order
+            init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
+        for i in range(num_inputs):
+            init_vars.append(('b0_%d' % i, [factor_order], 'zero', dtype)) # ? Why layer_output?
+        init_vars.append(('w_l', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
+        init_vars.append(('r', [num_lines, num_inputs*(num_inputs-1)/2], 'tnormal', dtype))
+        init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+            config.gpu_options.allow_growth = True
+            config.log_device_placement = False
+            self.sess = tf.Session(config=config)
+            with tf.device(gpu_device):
+                if random_seed is not None:
+                    tf.set_random_seed(random_seed)
+                self.X = [tf.sparse_placeholder(dtype, name='x%d' % i) for i in range(num_inputs+1)]
+                self.y = tf.placeholder(dtype)
+                self.vars = utils.init_var_map(init_vars, int_path)
+                w0 = [self.vars['w0_%d' % i] for i in range(num_inputs+1)]
+                # The dimension of b0 is only num_inputs since it's used only after lookup
+                b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
+            xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs+1) if i != index_lines]
+
+            with tf.device(gpu_device):
+                if has_field_bias:
+                    x = tf.concat([xw[i] + b0[i] for i in range(num_inputs)], 1)
+                else:
+                    x = tf.concat(xw, 1)
+                    #x = tf.concat([xw[i] for i in range(num_inputs)], 1)
+                l = tf.nn.dropout(
+                    utils.activate(x, layer_acts[0]),
+                    layer_keeps[0]
+                )
+
+                w_l = self.vars['w_l']
+                b1 = self.vars['b1']
+                #w_p = self.vars['r_1' ]
+
+            r = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['r'])
+
+            index_left = []
+            index_right = []
+            for i in range(num_inputs):
+                for j in range(num_inputs - i - 1):
+                    index_left.append(i)
+                    index_right.append(i+j+1)
+
+            with tf.device(gpu_device):
+                l_trans = tf.transpose(tf.reshape(l, [-1, num_inputs, factor_order]), [1,0,2])
+                l_left = tf.gather(l_trans, index_left)
+                l_right = tf.gather(l_trans, index_right)
+                p = tf.transpose(tf.multiply(l_left, l_right), [1,0,2])
+                p = tf.reduce_sum(p, 2)
+
+                print p.get_shape()
+                print r.get_shape()
+
+                p = tf.nn.dropout(
+                    utils.activate(
+                        tf.reduce_sum(
+                            tf.multiply(
+                                tf.reshape(p, [-1, num_inputs*(num_inputs-1)/2]),
+                                tf.reshape(r, [-1, num_inputs*(num_inputs-1)/2])),
+                            1),
+                        'none'),
+                    layer_keeps[1]
+                )
+
+                p = tf.reshape(p, [-1, 1])
+
+                l = utils.activate(
+                    tf.matmul(l, w_l) + b1 + p,
+                    layer_acts[1])
+
+                for i in range(2, len(layer_sizes) - 1):
+                    wi = self.vars['w%d' % i]
+                    bi = self.vars['b%d' % i]
+                    l = tf.nn.dropout(
+                        utils.activate(
+                            tf.matmul(l, wi) + bi,
+                            layer_acts[i]),
+                        layer_keeps[i])
+
+                self.y_prob = tf.sigmoid(l, name='y')
+                self.loss = tf.reduce_mean(
+                    tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y)
+                )
+
+                if l2_dict is not None:
+                    if l2_dict.has_key('linear_w'):
+                        self.loss += l2_dict['linear_w'] * tf.nn.l2_loss(w_l)
+                    if l2_dict.has_key('r'):
+                        self.loss += l2_dict['r'] * tf.nn.l2_loss(self.vars['r'])
+                    if l2_dict.has_key('v'):
+                        for i in range(num_inputs):
+                            self.loss += l2_dict['v'] * tf.nn.l2_loss(self.vars['w0_%d' % i])
+                self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
+            with tf.device(gpu_device):
+                tf.global_variables_initializer().run(session=self.sess)
+
+
+    def run(self, fetches, X=None, y=None):
+        feed_dict = {}
+        for i in range(len(X)):
+            feed_dict[self.X[i]] = X[i]
+        if y is not None:
+            feed_dict[self.y] = y
+        return self.sess.run(fetches, feed_dict)
+
+    def dump(self, model_path):
+        var_map = {}
+        for name, var in self.vars.iteritems():
+            var_map[name] = self.sess.run(var)
+        pkl.dump(var_map, open(model_path, 'wb'))
+        print 'model dumped at ', model_path
 
 class FwFM_LE:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,

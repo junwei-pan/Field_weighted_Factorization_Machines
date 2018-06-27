@@ -11,13 +11,14 @@ from time import gmtime, strftime
 import pickle as pkl
 from itertools import islice
 from conf.conf_fwfm import *
+from conf.conf_MTLfwfm import *
 from conf.conf_ffm import *
 from conf.conf_lr import *
 from conf.conf_fm import *
 #from conf.conf_fwfmoh import *
 
 import utils
-from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM, FwFM_LE
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM, FwFM_LE, MultiTask_FwFM
 
 # Criteo CTR data set
 #train_file = '/tmp/jwpan/data_criteo/train.txt.train.thres20.yx'
@@ -47,7 +48,9 @@ path_feature_map = '../data_yahoo/dataset2/featindex_25m_thres10.txt'
 path_saved_model = 'model'
 if os.path.exists(path_saved_model) and os.path.isdir(path_saved_model):
     shutil.rmtree(path_saved_model)
-INPUT_DIM, FIELD_OFFSETS = utils.initiate(path_feature_map)
+INPUT_DIM, FIELD_OFFSETS, FIELD_SIZES = utils.initiate(path_feature_map)
+
+print 'FIELD_SIZES', FIELD_SIZES
 
 train_label = utils.read_label(train_file)
 test_label = utils.read_label(test_file)
@@ -59,7 +62,7 @@ num_feas = len(utils.FIELD_SIZES)
 min_round = 1
 num_round = 1000
 early_stop_round = 2
-batch_size = 2000
+batch_size = 1000
 #bb = 10
 round_no_improve = 5
 
@@ -128,6 +131,7 @@ def train(model, name):
                 lst_test_pred.append(_test_preds)
         train_preds = np.concatenate(lst_train_pred)
         test_preds = np.concatenate(lst_test_pred)
+        print 'np.shape(train_preds)', np.shape(train_preds)
         train_score = roc_auc_score(train_label, train_preds)
         test_score = roc_auc_score(test_label, test_preds)
         print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
@@ -154,6 +158,8 @@ def train(model, name):
 
 def mapConf2Model(name):
     conf = d_name_conf[name]
+    # 'layer_sizes': [field_sizes, 10, 1],
+    conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
     model_name = name.split('_')[0]
     if model_name == 'ffm':
         return FFM(**conf)
@@ -165,6 +171,10 @@ def mapConf2Model(name):
         return LR(**conf)
     elif model_name == 'fwfmoh':
         return FwFM_LE(**conf)
+    elif model_name == 'MTLfwfm':
+        conf['index_lines'] = utils.index_lines
+        conf['num_lines'] = FIELD_SIZES[utils.index_lines]
+        return MultiTask_FwFM(**conf)
 
 #for name in ['ffm_l2_v_1e-7_lr_1e-1', 'ffm_l2_v_1e-7_lr_1e-2', 'ffm_l2_v_1e-7_lr_1e-3', 'ffm_l2_v_1e-7_lr_1e-4', 'ffm_l2_v_1e-7_lr_1e-5', 'ffm_l2_v_1e-7_lr_1e-6']:
 #for name in ['lr_l2_1e-7', 'lr_l2_1e-8', 'lr_l2_1e-9']:
@@ -179,7 +189,8 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-4', 'fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-6', 'fwfm_l2_v_1e-7', 'fwfm_l2_v_1e-8']:
 #for name in ['fwfm_l2_v_1e-6']:
 #for name in ['fm_l2_v_1e-6']:
-for name in ['fwfm_l2_v_1e-5']:
+#for name in ['fwfm_l2_v_1e-5']:
+for name in ['MTLfwfm_l2_v_1e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)

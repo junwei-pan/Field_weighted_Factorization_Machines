@@ -8,6 +8,7 @@ from scipy.sparse import coo_matrix
 DTYPE = tf.float32
 
 FIELD_SIZES = [0] * 15
+index_lines = 13
 d_name_conf = {}
 FIELD_OFFSETS = []
 INPUT_DIM = 0
@@ -26,7 +27,7 @@ def initiate(path):
                 FIELD_SIZES[f] += 1
     FIELD_OFFSETS = [sum(FIELD_SIZES[:i]) for i in range(len(FIELD_SIZES))]
     INPUT_DIM = sum(FIELD_SIZES)
-    return INPUT_DIM, FIELD_OFFSETS
+    return INPUT_DIM, FIELD_OFFSETS, FIELD_SIZES
 
 def process_lines(lines, name, INPUT_DIM, FIELD_OFFSETS):
     model = name.split('_')[0]
