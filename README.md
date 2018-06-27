@@ -29,7 +29,7 @@ LR, FM, FNN, CCPM and PNN are all implemented in `models.py`, based on TensorFlo
 
 You can train any of the models in `main.py`.
 
-For any questions, please report the issues or contact Junwei Pan(pandevirus@gmail.com).
+For any questions, please report the issues or contact Junwei Pan(jwpan@oath.com).
 
 ## Performance
 
@@ -55,7 +55,7 @@ layer l2 norm: 0
 
 ## One Week Dataset(3m)
 
-20170524-20170530 for train, 20170531 for test, please refer to [CTR_Data_Generation](https://git.corp.yahoo.com/jwpan/CTR_Data_Generation) for more information.
+20170524-20170530 for train, 20170531 for test, please refer to [CTR_Data_Generation](https://git.ouroath.com/jwpan/CTR_Data_Generation) for more information.
 
 Training dataset: 3,571,405 samples, 1,556,404 positive and 2,015,001 negative, positive sample has done 0.003 downsampleing. 34,288 unique features.
 
