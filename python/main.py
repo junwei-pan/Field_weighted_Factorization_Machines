@@ -110,11 +110,24 @@ def train(model, name, in_memory = True):
         elif batch_size == -1:
             pass
         if in_memory:
-            train_preds = model.run(model.y_prob, utils.slice(train_data)[0])
-            test_preds = model.run(model.y_prob, utils.slice(test_data)[0])
+            lst_train_preds = []
+            lst_test_preds = []
+            for j in range(train_size / batch_size + 1):
+                X_i, y_i = utils.slice(train_data, j * batch_size, batch_size)
+                p = model.run(model.y_prob, X_i, y_i)
+                lst_train_preds.append(p)
+            for j in range(test_size / batch_size + 1):
+                X_i, y_i = utils.slice(test_data, j * batch_size, batch_size)
+                p = model.run(model.y_prob, X_i, y_i)
+                lst_test_preds.append(p)
+            train_preds = np.concatenate(lst_train_preds)
+            test_preds = np.concatenate(lst_test_preds)
+            #train_preds = model.run(model.y_prob, utils.slice(train_data)[0])
+            #test_preds = model.run(model.y_prob, utils.slice(test_data)[0])
             train_score = roc_auc_score(train_data[1], train_preds)
             test_score = roc_auc_score(test_data[1], test_preds)
-            print '[%d]\tloss:%f\ttrain-auc: %f\teval-auc: %f' % (i, np.mean(ls), train_score, test_score)
+            #print '[%d]\tloss:%f\ttrain-auc: %f\teval-auc: %f' % (i, np.mean(ls), train_score, test_score)
+            print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
             history_score.append(test_score)
             sys.stdout.flush()
         else:

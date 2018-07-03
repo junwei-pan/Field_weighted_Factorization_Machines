@@ -899,9 +899,6 @@ class MultiTask_FwFM:
                 p = tf.transpose(tf.multiply(l_left, l_right), [1,0,2])
                 p = tf.reduce_sum(p, 2)
 
-                print p.get_shape()
-                print r.get_shape()
-
                 p = tf.nn.dropout(
                     utils.activate(
                         tf.reduce_sum(
