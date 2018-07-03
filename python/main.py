@@ -68,74 +68,97 @@ round_no_improve = 5
 
 field_offsets = utils.FIELD_OFFSETS
 
-def train(model, name):
+def train(model, name, in_memory = True):
     builder = tf.saved_model.builder.SavedModelBuilder('model')
     global batch_size, time_run, time_read, time_process
     history_score = []
     start_time = time.time()
     print 'epochs\tloss\ttrain-auc\teval-auc\ttime'
     sys.stdout.flush()
+    if in_memory:
+        train_data = utils.read_data(train_file, INPUT_DIM)
+        test_data = utils.read_data(test_file, INPUT_DIM)
+        model_name = name.split('_')[0]
+        if model_name in ['fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2', 'fm', 'fwfm', 'MTLfwfm']:
+            train_data = utils.split_data(train_data, FIELD_OFFSETS)
+            test_data = utils.split_data(test_data, FIELD_OFFSETS)
     for i in range(num_round):
         fetches = [model.optimizer, model.loss]
         if batch_size > 0:
             ls = []
-            f = open(train_file, 'r')
-            lst_lines = []
-            for line in f:
-                if len(lst_lines) < batch_size:
-                    lst_lines.append(line)
-                else:
-                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1) # type of X_i, X_i[0], X_i[0][0] is list, tuple and np.ndarray respectively.
+            if in_memory:
+                for j in range(train_size / batch_size + 1):
+                    X_i, y_i = utils.slice(train_data, j * batch_size, batch_size)
                     _, l = model.run(fetches, X_i, y_i)
                     ls.append(l)
-                    lst_lines = [line]
-            f.close()
-            if len(lst_lines) > 0:
-                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
-                _, l = model.run(fetches, X_i, y_i)
-                ls.append(l)
+            else:
+                f = open(train_file, 'r')
+                lst_lines = []
+                for line in f:
+                    if len(lst_lines) < batch_size:
+                        lst_lines.append(line)
+                    else:
+                        X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1) # type of X_i, X_i[0], X_i[0][0] is list, tuple and np.ndarray respectively.
+                        _, l = model.run(fetches, X_i, y_i)
+                        ls.append(l)
+                        lst_lines = [line]
+                f.close()
+                if len(lst_lines) > 0:
+                    X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
+                    _, l = model.run(fetches, X_i, y_i)
+                    ls.append(l)
         elif batch_size == -1:
             pass
-        lst_train_pred = []
-        lst_test_pred = []
-        if batch_size > 0:
-            f = open(train_file, 'r')
-            lst_lines = []
-            for line in f:
-                if len(lst_lines) < batch_size:
-                    lst_lines.append(line)
-                else:
+        if in_memory:
+            train_preds = model.run(model.y_prob, utils.slice(train_data)[0])
+            test_preds = model.run(model.y_prob, utils.slice(test_data)[0])
+            train_score = roc_auc_score(train_data[1], train_preds)
+            test_score = roc_auc_score(test_data[1], test_preds)
+            print '[%d]\tloss:%f\ttrain-auc: %f\teval-auc: %f' % (i, np.mean(ls), train_score, test_score)
+            history_score.append(test_score)
+            sys.stdout.flush()
+        else:
+            lst_train_pred = []
+            lst_test_pred = []
+            if batch_size > 0:
+                f = open(train_file, 'r')
+                lst_lines = []
+                for line in f:
+                    if len(lst_lines) < batch_size:
+                        lst_lines.append(line)
+                    else:
+                        X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
+                        _train_preds = model.run(model.y_prob, X_i)
+                        lst_train_pred.append(_train_preds)
+                        lst_lines = [line]
+                f.close()
+                if len(lst_lines) > 0:
                     X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                     _train_preds = model.run(model.y_prob, X_i)
                     lst_train_pred.append(_train_preds)
-                    lst_lines = [line]
-            f.close()
-            if len(lst_lines) > 0:
-                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
-                _train_preds = model.run(model.y_prob, X_i)
-                lst_train_pred.append(_train_preds)
-            f = open(test_file, 'r')
-            lst_lines = []
-            for line in f:
-                if len(lst_lines) < batch_size:
-                    lst_lines.append(line)
-                else:
+                f = open(test_file, 'r')
+                lst_lines = []
+                for line in f:
+                    if len(lst_lines) < batch_size:
+                        lst_lines.append(line)
+                    else:
+                        X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
+                        _test_preds = model.run(model.y_prob, X_i)
+                        lst_test_pred.append(_test_preds)
+                        lst_lines = [line]
+                f.close()
+                if len(lst_lines) > 0:
                     X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                     _test_preds = model.run(model.y_prob, X_i)
                     lst_test_pred.append(_test_preds)
-                    lst_lines = [line]
-            f.close()
-            if len(lst_lines) > 0:
-                X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
-                _test_preds = model.run(model.y_prob, X_i)
-                lst_test_pred.append(_test_preds)
-        train_preds = np.concatenate(lst_train_pred)
-        test_preds = np.concatenate(lst_test_pred)
-        print 'np.shape(train_preds)', np.shape(train_preds)
-        train_score = roc_auc_score(train_label, train_preds)
-        test_score = roc_auc_score(test_label, test_preds)
-        print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-        sys.stdout.flush()
+            train_preds = np.concatenate(lst_train_pred)
+            test_preds = np.concatenate(lst_test_pred)
+            print 'np.shape(train_preds)', np.shape(train_preds)
+            train_score = roc_auc_score(train_label, train_preds)
+            test_score = roc_auc_score(test_label, test_preds)
+            print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+            sys.stdout.flush()
+        '''
         if i == 0:
             map = {}
             for i in range(15):
@@ -155,6 +178,7 @@ def train(model, name):
             builder.save()
         if i == 12:
             break
+        '''
 
 def mapConf2Model(name):
     conf = d_name_conf[name]
@@ -194,5 +218,5 @@ for name in ['MTLfwfm_l2_v_1e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
-    train(model, name + '_yahoo_dataset2.2')
+    train(model, name + '_yahoo_dataset2.2', True)
     #train(model, name + '_criteo')

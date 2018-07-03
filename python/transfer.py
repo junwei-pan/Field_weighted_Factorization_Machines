@@ -17,11 +17,20 @@ thres = 20
 '''
 
 # Configuration for Yahoo data set
+'''
 index_label = 28
 index_cat_start = 0
 num_fields = 15
 lst_index_cat = range(index_cat_start, index_cat_start + num_fields)
 thres = 10
+'''
+
+# Configuration for Conversion data set
+index_label = 20
+index_cat_start = 0
+num_fields = 15
+lst_index_cat = range(index_cat_start, index_cat_start + num_fields)
+thres = 20
 
 print "Index of label", index_label
 print "List of indexes of categorical features", lst_index_cat
@@ -41,11 +50,18 @@ path_fea_index = '../data_cretio/featindex_thres20.txt'
 '''
 
 # Yahoo CTR data set.
+'''
 dir = '../data_yahoo/dataset2'
 path_train = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt'
 path_validation = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1'
 path_test = '../data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1'
+'''
 
+# Conversion Data Set
+dir = '../data_ctr'
+path_train = '../data_cvr/cvr_imp_20180610_conv_20180610_0616.csv'
+path_validation = '../data_cvr/cvr_imp_20180611_conv_20180611_0617.csv'
+path_fea_index = '../data_cvr/featureindex_thres%d.txt' % thres
 
 batch = 100000
 
@@ -200,6 +216,7 @@ def create_yx(path, mode, model='fm', d=14, k=2):
     file.close()
 
 # To generate several data sets for FFM with different hashing space.
+'''
 d = num_fields - 1
 
 print 'build field feature'
@@ -218,10 +235,10 @@ for k in [2, 4]:
     create_yx(path_train, 'train', 'ffm', d, k)
     create_yx(path_validation, 'train', 'ffm', d, k)
     create_yx(path_test, 'train', 'ffm', d, k)
-
 '''
-flagLibLinear = False
-model = 'liblinear'
+
+#flagLibLinear = False
+model = 'fwfm'
 print ' ===> model: %s <=== ' % model
 
 print 'build field feature'
@@ -229,10 +246,9 @@ build_field_feature(path_train, 'train')
 
 print 'create fea index'
 create_fea_index(path_fea_index, model)
-#create_ffm_fea_index(path_fea_ffm_index, d, k)
 
 print 'create yx'
 create_yx(path_train, 'train', model)
 create_yx(path_validation, 'train', model)
-create_yx(path_test, 'train', model)
-'''
+#create_yx(path_test, 'train', model)
+

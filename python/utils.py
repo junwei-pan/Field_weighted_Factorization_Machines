@@ -47,7 +47,7 @@ def process_lines(lines, name, INPUT_DIM, FIELD_OFFSETS):
     else:
         return split_data((X, y), FIELD_OFFSETS)
 
-def read_data(file_name, read_data):
+def read_data(file_name, INPUT_DIM):
     X = []
     y = []
     with open(file_name) as fin:
@@ -80,7 +80,6 @@ def shuffle(data):
         np.random.shuffle(ind)
     return X[ind], y[ind]
 
-
 def libsvm_2_coo(libsvm_data, shape):
     coo_rows = []
     coo_cols = []
@@ -93,7 +92,6 @@ def libsvm_2_coo(libsvm_data, shape):
     coo_cols = np.array(coo_cols)
     coo_data = np.ones_like(coo_rows)
     return coo_matrix((coo_data, (coo_rows, coo_cols)), shape=shape)
-
 
 def csr_2_input(csr_mat):
     if not isinstance(csr_mat, list):
