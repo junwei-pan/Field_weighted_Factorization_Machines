@@ -28,8 +28,8 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #test_file = '/tmp/jwpan/data_criteo/train.txt.test.thres20.ffm10.0.yx'
 
 # Yahoo CTR data set
-train_file = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.10k'
-test_file = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx.10k'
+#train_file = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.10k'
+#test_file = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx.10k'
 #train_file = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
 #test_file = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
@@ -39,12 +39,17 @@ test_file = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
 
+# Yahoo CVR data set
+train_file = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres10.yx'
+test_file = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres10.yx'
+
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
 print "test_file: ", test_file
 sys.stdout.flush()
 
-path_feature_map = '../data_yahoo/dataset2/featindex_25m_thres10.txt'
+#path_feature_map = '../data_yahoo/dataset2/featindex_25m_thres10.txt'
+path_feature_map = 'featureindex_thres10.txt'
 path_saved_model = 'model'
 if os.path.exists(path_saved_model) and os.path.isdir(path_saved_model):
     shutil.rmtree(path_saved_model)
