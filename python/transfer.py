@@ -26,11 +26,15 @@ thres = 10
 '''
 
 # Configuration for Conversion data set
-index_label = 20
+# 1-15, 17, 18
+# 0: publisher_id, 1: page_tld, 2: subdomain, 3: layout_id, 4: user_local_day_of_week,
+# 5: user_local_hour, 6: gender, 7: ad_placement_id, 8: ad_position_id, 9: age, 10: account_id,
+# 11: ad_id, 12: creative_id, 13: creative_media_id, 14: device_type_id, 15: conv_type, 16: line_id, 17: user_id
+index_label = 22
 index_cat_start = 0
-num_fields = 15
-lst_index_cat = range(index_cat_start, index_cat_start + num_fields)
-thres = 20
+num_fields = 17
+lst_index_cat = range(index_cat_start, index_cat_start + num_fields - 2) + [16,17]
+thres = 10
 
 print "Index of label", index_label
 print "List of indexes of categorical features", lst_index_cat
@@ -59,8 +63,8 @@ path_test = '../data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1'
 
 # Conversion Data Set
 dir = '../data_ctr'
-path_train = '../data_cvr/cvr_imp_20180610_conv_20180610_0616.csv'
-path_validation = '../data_cvr/cvr_imp_20180611_conv_20180611_0617.csv'
+path_train = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type'
+path_validation = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type'
 path_fea_index = '../data_cvr/featureindex_thres%d.txt' % thres
 
 batch = 100000
@@ -85,7 +89,7 @@ def build_field_feature(path, mode):
             print i * 1.0 / total
             sys.stdout.flush()
         lst = line.strip('\n').split('\t')
-        for idx_field in range(num_fields):
+        for idx_field in lst_index_cat:
             fea = lst[index_cat_start + idx_field]
             d_field_fea.setdefault(idx_field, set())
             d_field_fea[idx_field].add(fea)
@@ -103,7 +107,7 @@ def create_fea_index(path, model):
     else:
         index = 0
         file = open(path, 'w')
-    for idx_field in range(num_fields):
+    for idx_field in lst_index_cat:
         d_fea_index.setdefault(idx_field, {})
         d_fea_index[idx_field]['zero_fea_for_field_' + str(idx_field)] = index
         file.write("%d:%s\t%d\n" % (idx_field, 'zero_fea_for_field_' + str(idx_field), index))
@@ -130,7 +134,7 @@ def create_ffm_fea_index(path, d=14, k=2):
     cnt_fea_after_hash = 0
     index = 0
     file = open(path, 'w')
-    for idx_field in range(num_fields):
+    for idx_field in lst_index_cat:
         cnt_qualify_for_this_field = 0
         d_fea_index.setdefault(idx_field, {})
         d_fea_index[idx_field]['zero_fea_for_field_' + str(idx_field)] = index
@@ -196,7 +200,7 @@ def create_yx(path, mode, model='fm', d=14, k=2):
                 print 'label', label
         elif mode == 'test':
             res.append('0')
-        for idx in range(num_fields):
+        for idx in lst_index_cat:
             fea = lst[index_cat_start + idx]
             if i == 0:
                 print 'idx: %d, fea: %s' % (idx, fea)
