@@ -40,9 +40,9 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
 
 # Yahoo CVR data set
-train_file = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.10k'
-validation_file = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx.10k'
-test_file = '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx.10k'
+train_file = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx'
+validation_file = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx'
+test_file = '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx'
 
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
@@ -282,8 +282,8 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-6']:
 #for name in ['fm_l2_v_1e-6']:
 #for name in ['fwfm_l2_v_1e-5']:
-#for name in ['fwfm_l2_v_1e-5']:
-for name in ['MTLfwfm_l2_v_1e-5', 'MTLfwfm_lr_1e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5']:
+#for name in ['MTLfwfm_l2_v_1e-5', 'MTLfwfm_lr_1e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5']:
+for name in ['fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-5_lr_1e-5', 'fwfm_l2_v_1e-5_lr_5e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
