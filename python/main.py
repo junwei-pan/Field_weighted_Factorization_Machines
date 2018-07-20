@@ -77,7 +77,7 @@ round_no_improve = 5
 
 field_offsets = utils.FIELD_OFFSETS
 
-def train(model, name, in_memory = True):
+def train(model, name, in_memory = True, flag_MTL = True):
     #builder = tf.saved_model.builder.SavedModelBuilder('model')
     global batch_size, time_run, time_read, time_process
     history_score = []
@@ -148,6 +148,37 @@ def train(model, name, in_memory = True):
             test_score = roc_auc_score(test_data[1], test_preds)
             #print '[%d]\tloss:%f\ttrain-auc: %f\teval-auc: %f' % (i, np.mean(ls), train_score, test_score)
             print '%d\t%f\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, validation_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+            if flag_MTL:
+                d_index_task_label_pred_train = {}
+                d_index_task_label_pred_validation = {}
+                d_index_task_label_pred_test = {}
+                index_task_train = train_data[0][-1].indices
+                index_task_validation = validation_data[0][-1].indices
+                index_task_test = test_data[0][-1].indices
+                for index_tmp in range(len(index_task_train)):
+                    index_task = index_task_train[index_tmp]
+                    d_index_task_label_pred_train.setdefault(index_task, [[],[]])
+                    d_index_task_label_pred_train[index_task][0].append(train_data[1][index_tmp])
+                    d_index_task_label_pred_train[index_task][1].append(train_preds[index_tmp])
+                for index_task in sorted(list(set(index_task_train))):
+                    auc = roc_auc_score(d_index_task_label_pred_train[index_task][0], d_index_task_label_pred_train[index_task][1])
+                    print 'train, index_type: %d, number of samples: %d, AUC: %f' % (index_task, len(d_index_task_label_pred_train[index_task][0]), auc)
+                for index_tmp in range(len(index_task_validation)):
+                    index_task = index_task_validation[index_tmp]
+                    d_index_task_label_pred_validation.setdefault(index_task, [[],[]])
+                    d_index_task_label_pred_validation[index_task][0].append(validation_data[1][index_tmp])
+                    d_index_task_label_pred_validation[index_task][1].append(validation_preds[index_tmp])
+                for index_task in sorted(list(set(index_task_validation))):
+                    auc = roc_auc_score(d_index_task_label_pred_validation[index_task][0], d_index_task_label_pred_validation[index_task][1])
+                    print 'validation, index_type: %d, number of samples: %d, AUC: %f' % (index_task, len(d_index_task_label_pred_validation[index_task][0]), auc)
+                for index_tmp in range(len(index_task_test)):
+                    index_task = index_task_test[index_tmp]
+                    d_index_task_label_pred_test.setdefault(index_task, [[],[]])
+                    d_index_task_label_pred_test[index_task][0].append(test_data[1][index_tmp])
+                    d_index_task_label_pred_test[index_task][1].append(test_preds[index_tmp])
+                for index_task in sorted(list(set(index_task_test))):
+                    auc = roc_auc_score(d_index_task_label_pred_test[index_task][0], d_index_task_label_pred_test[index_task][1])
+                    print 'test, index_type: %d, number of samples: %d, AUC: %f' % (index_task, len(d_index_task_label_pred_test[index_task][0]), auc)
             history_score.append(validation_score)
             if validation_score < best_score:
                 break
