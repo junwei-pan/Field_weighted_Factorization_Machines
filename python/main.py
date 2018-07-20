@@ -40,27 +40,31 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
 
 # Yahoo CVR data set
-train_file = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres10.yx'
-test_file = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres10.yx'
+train_file = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx'
+validation_file = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx'
+test_file = '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx'
 
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
+print "validation_file: ", validation_file
 print "test_file: ", test_file
 sys.stdout.flush()
 
 #path_feature_map = '../data_yahoo/dataset2/featindex_25m_thres10.txt'
-path_feature_map = 'featureindex_thres10.txt'
-path_saved_model = 'model'
-if os.path.exists(path_saved_model) and os.path.isdir(path_saved_model):
-    shutil.rmtree(path_saved_model)
+path_feature_map = '../data_cvr/featureindex_thres5.txt'
+#path_saved_model = 'model'
+#if os.path.exists(path_saved_model) and os.path.isdir(path_saved_model):
+#    shutil.rmtree(path_saved_model)
 INPUT_DIM, FIELD_OFFSETS, FIELD_SIZES = utils.initiate(path_feature_map)
 
 print 'FIELD_SIZES', FIELD_SIZES
 
 train_label = utils.read_label(train_file)
+validation_label = utils.read_label(validation_file)
 test_label = utils.read_label(test_file)
 
 train_size = train_label.shape[0]
+validation_size = validation_label.shape[0]
 test_size = test_label.shape[0]
 num_feas = len(utils.FIELD_SIZES)
 
@@ -74,18 +78,21 @@ round_no_improve = 5
 field_offsets = utils.FIELD_OFFSETS
 
 def train(model, name, in_memory = True):
-    builder = tf.saved_model.builder.SavedModelBuilder('model')
+    #builder = tf.saved_model.builder.SavedModelBuilder('model')
     global batch_size, time_run, time_read, time_process
     history_score = []
+    best_score = -1
     start_time = time.time()
     print 'epochs\tloss\ttrain-auc\teval-auc\ttime'
     sys.stdout.flush()
     if in_memory:
         train_data = utils.read_data(train_file, INPUT_DIM)
+        validation_data = utils.read_data(validation_file, INPUT_DIM)
         test_data = utils.read_data(test_file, INPUT_DIM)
         model_name = name.split('_')[0]
         if model_name in ['fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2', 'fm', 'fwfm', 'MTLfwfm']:
             train_data = utils.split_data(train_data, FIELD_OFFSETS)
+            validation_data = utils.split_data(validation_data, FIELD_OFFSETS)
             test_data = utils.split_data(test_data, FIELD_OFFSETS)
     for i in range(num_round):
         fetches = [model.optimizer, model.loss]
@@ -114,26 +121,37 @@ def train(model, name, in_memory = True):
                     ls.append(l)
         elif batch_size == -1:
             pass
+        model.dump('model/' + name + '_epoch_' + str(i))
         if in_memory:
             lst_train_preds = []
+            lst_validation_preds = []
             lst_test_preds = []
             for j in range(train_size / batch_size + 1):
                 X_i, y_i = utils.slice(train_data, j * batch_size, batch_size)
                 p = model.run(model.y_prob, X_i, y_i)
                 lst_train_preds.append(p)
+            for j in range(validation_size / batch_size + 1):
+                X_i, y_i = utils.slice(validation_data, j * batch_size, batch_size)
+                p = model.run(model.y_prob, X_i, y_i)
+                lst_validation_preds.append(p)
             for j in range(test_size / batch_size + 1):
                 X_i, y_i = utils.slice(test_data, j * batch_size, batch_size)
                 p = model.run(model.y_prob, X_i, y_i)
                 lst_test_preds.append(p)
             train_preds = np.concatenate(lst_train_preds)
+            validation_preds = np.concatenate(lst_validation_preds)
             test_preds = np.concatenate(lst_test_preds)
             #train_preds = model.run(model.y_prob, utils.slice(train_data)[0])
             #test_preds = model.run(model.y_prob, utils.slice(test_data)[0])
             train_score = roc_auc_score(train_data[1], train_preds)
+            validation_score = roc_auc_score(validation_data[1], validation_preds)
             test_score = roc_auc_score(test_data[1], test_preds)
             #print '[%d]\tloss:%f\ttrain-auc: %f\teval-auc: %f' % (i, np.mean(ls), train_score, test_score)
-            print '%d\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-            history_score.append(test_score)
+            print '%d\t%f\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, validation_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+            history_score.append(validation_score)
+            if validation_score < best_score:
+                break
+            best_score = validation_score
             sys.stdout.flush()
         else:
             lst_train_pred = []
@@ -144,7 +162,7 @@ def train(model, name, in_memory = True):
                 for line in f:
                     if len(lst_lines) < batch_size:
                         lst_lines.append(line)
-                    else:
+   :
                         X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                         _train_preds = model.run(model.y_prob, X_i)
                         lst_train_pred.append(_train_preds)
@@ -202,6 +220,7 @@ def mapConf2Model(name):
     conf = d_name_conf[name]
     # 'layer_sizes': [field_sizes, 10, 1],
     conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
+    print 'conf', conf
     model_name = name.split('_')[0]
     if model_name == 'ffm':
         return FFM(**conf)
@@ -232,7 +251,8 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-6']:
 #for name in ['fm_l2_v_1e-6']:
 #for name in ['fwfm_l2_v_1e-5']:
-for name in ['MTLfwfm_l2_v_1e-5']:
+#for name in ['fwfm_l2_v_1e-5']:
+for name in ['MTLfwfm_l2_v_1e-5', 'MTLfwfm_lr_1e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)

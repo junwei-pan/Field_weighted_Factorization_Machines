@@ -7,7 +7,7 @@ from scipy.sparse import coo_matrix
 
 DTYPE = tf.float32
 
-FIELD_SIZES = [0] * 17
+FIELD_SIZES = [0] * 18
 index_lines = 13
 d_name_conf = {}
 FIELD_OFFSETS = []
