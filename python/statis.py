@@ -166,6 +166,7 @@ def statis_n_feature(path):
         for x in lst:
             set_fea.add(x)
     print len(set_fea)
+'''
 path1 = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
 statis_n_feature(path1)
 path2 = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
@@ -178,31 +179,28 @@ path2 = '../data_cretio/train.txt.validation.thres20.yx'
 statis_n_feature(path2)
 path3 = '../data_cretio/train.txt.test.thres20.yx'
 statis_n_feature(path3)
-
 '''
+
 statis = statis()
 #print 'load feature index'
 #sys.stdout.flush()
 #statis.load_feature_index('../data_yahoo/dataset2/featindex_25m_thres10.txt')
-print 'load data'
 sys.stdout.flush()
 #statis.load_data('../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx')
-statis.load_data('../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.downsample_all.0.05')
-print 'load model'
+statis.load_data('../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.Sign_Up')
 sys.stdout.flush()
-statis.load_model('model/yahoo_dataset2.2_fwfm_epoch_2', 'fwfm')
+#statis.load_model('model/yahoo_dataset2.2_fwfm_epoch_2', 'fwfm')
 #statis.load_model('model/ffm_l2_v_1e-7_lr_1e-4_yahoo_epoch_2', 'ffm')
-for fi in range(15):
-    for fj in range(fi+1, 15):
-        res = statis.average_latent_vector_dot_product_for_field_pair(fi, fj, 'fwfm')
-        print "%f\t%f\t%f\t%f" % (res[0], res[1], res[2], res[3])
-        sys.stdout.flush()
-        #res = statis.mutual_information(fi, fj)
-        #print res
+for fi in range(17):
+    for fj in range(fi+1, 17):
+        #res = statis.average_latent_vector_dot_product_for_field_pair(fi, fj, 'fwfm')
+        #print "%f\t%f\t%f\t%f" % (res[0], res[1], res[2], res[3])
+        #sys.stdout.flush()
+        res = statis.mutual_information(fi, fj)
+        print res
         #res = statis.get_field_pair_pearson_corr_with_label(i,j)
         #print '%d\t%d\t%f\t%f' % (i, j, res[0], res[1])
-'''
-'''
+
 def main_kendalltau():
     path_mi = 'data/yahoo_mi'
     path_fm = 'data/yahoo_fm'
@@ -226,6 +224,3 @@ def main_kendalltau():
     print pearsonr(x_mi, x_r)
     print 'mi v.s fwfm_without_r'
     print pearsonr(x_mi, x_fwfm_without_r)
-
-main_kendalltau()
-'''

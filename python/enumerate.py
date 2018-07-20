@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 path = sys.argv[1]
-n = 15
+n = 17
 data = []
 
 for line in open(path):

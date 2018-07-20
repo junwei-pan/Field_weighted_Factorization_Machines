@@ -16,8 +16,11 @@ class MidpointNormalize(colors.Normalize):
         return np.ma.masked_array(np.interp(value, x, y))
 
 path = sys.argv[1]
-l = ['PUBLISHER_ID', 'PAGE_TLD',    'SUBDOMAIN',   'LAYOUT_ID',   'HOUR_OF_DAY', 'DAY_OF_WEEK', 'GENDER', 'AD_POSITION_ID',
-'AGE_BUCKET', 'ADVERTISER_ID', 'AD_ID', 'CRRATIVE_ID', 'DEVICE_TYPE_ID', 'LINE_ID', 'USER_ID']
+#l = ['PUBLISHER_ID', 'PAGE_TLD',    'SUBDOMAIN',   'LAYOUT_ID',   'HOUR_OF_DAY', 'DAY_OF_WEEK', 'GENDER', 'AD_POSITION_ID',
+#'AGE_BUCKET', 'ADVERTISER_ID', 'AD_ID', 'CRRATIVE_ID', 'DEVICE_TYPE_ID', 'LINE_ID', 'USER_ID']
+l = ['PUBLISHER', 'PAGE_TLD',    'SUBDOMAIN',   'LAYOUT',   'DAY_OF_WEEK', 'HOUR_OF_DAY', 'GENDER', 'AD_PLACEMENT',
+     'AD_POSITION', 'AGE_BUCKET', 'ADVERTISER', 'AD', 'CRRATIVE', 'CREATIVE_MEDIA', 'DEVICE_TYPE',
+     'LINE', 'USER']
 a = np.array(json.load(open(path)), dtype = float)
 print a.shape
 print a

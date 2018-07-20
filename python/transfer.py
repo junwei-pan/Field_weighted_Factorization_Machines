@@ -29,12 +29,12 @@ thres = 10
 # 1-15, 17, 18
 # 0: publisher_id, 1: page_tld, 2: subdomain, 3: layout_id, 4: user_local_day_of_week,
 # 5: user_local_hour, 6: gender, 7: ad_placement_id, 8: ad_position_id, 9: age, 10: account_id,
-# 11: ad_id, 12: creative_id, 13: creative_media_id, 14: device_type_id, 15: conv_type, 16: line_id, 17: user_id
+# 11: ad_id, 12: creative_id, 13: creative_media_id, 14: device_type_id, 15: line_id, 16: user_id, 17: conv_type
 index_label = 22
 index_cat_start = 0
-num_fields = 17
-lst_index_cat = range(index_cat_start, index_cat_start + num_fields - 2) + [16,17]
-thres = 10
+num_fields = 18
+lst_index_cat = range(index_cat_start, index_cat_start+num_fields)
+thres = 5
 
 print "Index of label", index_label
 print "List of indexes of categorical features", lst_index_cat
@@ -44,6 +44,7 @@ print "Threshold", thres
 d_field_fea = {}
 d_fea_index = {}
 d_field_fea_cnt = {}
+d_field_fea_cnt_above_threshold = {}
 # Criteo CTR data set.
 '''
 dir = '../data_cretio'
@@ -65,6 +66,7 @@ path_test = '../data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1'
 dir = '../data_ctr'
 path_train = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type'
 path_validation = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type'
+path_test = '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type'
 path_fea_index = '../data_cvr/featureindex_thres%d.txt' % thres
 
 batch = 100000
@@ -90,12 +92,19 @@ def build_field_feature(path, mode):
             sys.stdout.flush()
         lst = line.strip('\n').split('\t')
         for idx_field in lst_index_cat:
-            fea = lst[index_cat_start + idx_field]
+            fea = lst[idx_field]
             d_field_fea.setdefault(idx_field, set())
             d_field_fea[idx_field].add(fea)
             d_field_fea_cnt.setdefault(idx_field, {})
             d_field_fea_cnt[idx_field].setdefault(fea, 0) 
             d_field_fea_cnt[idx_field][fea] += 1
+    for index_field in lst_index_cat:
+        for fea in d_field_fea_cnt[index_field].keys():
+            if d_field_fea_cnt[index_field][fea] > thres:
+                d_field_fea_cnt_above_threshold.setdefault(index_field, {})
+                d_field_fea_cnt_above_threshold[index_field][fea] = d_field_fea_cnt[index_field][fea]
+    for index_field in lst_index_cat:
+        print 'unique number of features:', index_field, len(d_field_fea_cnt_above_threshold[index_field].keys())
 
 def create_fea_index(path, model):
     cnt_qualify = 0
@@ -254,5 +263,6 @@ create_fea_index(path_fea_index, model)
 print 'create yx'
 create_yx(path_train, 'train', model)
 create_yx(path_validation, 'train', model)
+create_yx(path_test, 'train', model)
 #create_yx(path_test, 'train', model)
 
