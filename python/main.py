@@ -40,9 +40,9 @@ from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR
 #test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
 
 # Yahoo CVR data set
-train_file = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx'
-validation_file = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx'
-test_file = '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx'
+train_file = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.10k'
+validation_file = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx.10k'
+test_file = '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx.10k'
 
 # fm_model_file = '../data/fm.model.txt'
 print "train_file: ", train_file
@@ -162,7 +162,7 @@ def train(model, name, in_memory = True):
                 for line in f:
                     if len(lst_lines) < batch_size:
                         lst_lines.append(line)
-   :
+                    else:
                         X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                         _train_preds = model.run(model.y_prob, X_i)
                         lst_train_pred.append(_train_preds)

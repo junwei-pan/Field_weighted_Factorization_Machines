@@ -848,9 +848,9 @@ class MultiTask_FwFM:
             init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
         for i in range(num_inputs):
             init_vars.append(('b0_%d' % i, [factor_order], 'zero', dtype)) # ? Why layer_output?
-        init_vars.append(('w_l', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
+        init_vars.append(('w_l', [num_lines, num_inputs * factor_order], 'tnormal', dtype))
         init_vars.append(('r', [num_lines, num_inputs*(num_inputs-1)/2], 'tnormal', dtype))
-        init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
+        init_vars.append(('b1', [num_lines, layer_sizes[2]], 'zero', dtype))
         self.graph = tf.Graph()
         with self.graph.as_default():
             config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
@@ -879,11 +879,15 @@ class MultiTask_FwFM:
                     layer_keeps[0]
                 )
 
-                w_l = self.vars['w_l']
-                b1 = self.vars['b1']
+                #w_l = self.vars['w_l']
+                #b1 = self.vars['b1']
                 #w_p = self.vars['r_1' ]
 
             r = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['r'])
+            w_l = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['w_l'])
+            b1 = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['b1'])
+            w_l = tf.reshape(w_l, [-1, num_inputs * factor_order])
+            b1 = tf.reshape(b1, [-1, layer_sizes[2]])
 
             index_left = []
             index_right = []
@@ -913,7 +917,7 @@ class MultiTask_FwFM:
                 p = tf.reshape(p, [-1, 1])
 
                 l = utils.activate(
-                    tf.matmul(l, w_l) + b1 + p,
+                    tf.reshape(tf.reduce_sum(tf.multiply(l, w_l), 1), [-1, 1]) + b1 + p,
                     layer_acts[1])
 
                 for i in range(2, len(layer_sizes) - 1):
