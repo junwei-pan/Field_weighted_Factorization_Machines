@@ -82,6 +82,7 @@ def train(model, name, in_memory = True, flag_MTL = True):
     global batch_size, time_run, time_read, time_process
     history_score = []
     best_score = -1
+    best_epoch = -1
     start_time = time.time()
     print 'epochs\tloss\ttrain-auc\teval-auc\ttime'
     sys.stdout.flush()
@@ -146,6 +147,12 @@ def train(model, name, in_memory = True, flag_MTL = True):
             train_score = roc_auc_score(train_data[1], train_preds)
             validation_score = roc_auc_score(validation_data[1], validation_preds)
             test_score = roc_auc_score(test_data[1], test_preds)
+            train_score_sum = 0
+            train_score_weight = 0
+            validation_score_sum = 0
+            validation_score_weight = 0
+            test_score_sum = 0
+            test_score_weight = 0
             #print '[%d]\tloss:%f\ttrain-auc: %f\teval-auc: %f' % (i, np.mean(ls), train_score, test_score)
             print '%d\t%f\t%f\t%f\t%f\t%f\t%s' % (i, np.mean(ls), train_score, validation_score, test_score, time.time() - start_time, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
             if flag_MTL:
@@ -162,6 +169,9 @@ def train(model, name, in_memory = True, flag_MTL = True):
                     d_index_task_label_pred_train[index_task][1].append(train_preds[index_tmp])
                 for index_task in sorted(list(set(index_task_train))):
                     auc = roc_auc_score(d_index_task_label_pred_train[index_task][0], d_index_task_label_pred_train[index_task][1])
+                    num_samples = len(d_index_task_label_pred_train[index_task][0])
+                    train_score_sum += auc * num_samples
+                    train_score_weight += num_samples
                     print 'train, index_type: %d, number of samples: %d, AUC: %f' % (index_task, len(d_index_task_label_pred_train[index_task][0]), auc)
                 for index_tmp in range(len(index_task_validation)):
                     index_task = index_task_validation[index_tmp]
@@ -170,7 +180,10 @@ def train(model, name, in_memory = True, flag_MTL = True):
                     d_index_task_label_pred_validation[index_task][1].append(validation_preds[index_tmp])
                 for index_task in sorted(list(set(index_task_validation))):
                     auc = roc_auc_score(d_index_task_label_pred_validation[index_task][0], d_index_task_label_pred_validation[index_task][1])
-                    print 'validation, index_type: %d, number of samples: %d, AUC: %f' % (index_task, len(d_index_task_label_pred_validation[index_task][0]), auc)
+                    num_samples = len(d_index_task_label_pred_validation[index_task][0])
+                    validation_score_sum += auc * num_samples
+                    validation_score_weight += num_samples
+                    print 'validation, index_type: %d, number of samples: %d, AUC: %f' % (index_task, num_samples, auc)
                 for index_tmp in range(len(index_task_test)):
                     index_task = index_task_test[index_tmp]
                     d_index_task_label_pred_test.setdefault(index_task, [[],[]])
@@ -178,11 +191,22 @@ def train(model, name, in_memory = True, flag_MTL = True):
                     d_index_task_label_pred_test[index_task][1].append(test_preds[index_tmp])
                 for index_task in sorted(list(set(index_task_test))):
                     auc = roc_auc_score(d_index_task_label_pred_test[index_task][0], d_index_task_label_pred_test[index_task][1])
+                    num_samples = len(d_index_task_label_pred_test[index_task][0])
+                    test_score_sum += auc * num_samples
+                    test_score_weight += num_samples
                     print 'test, index_type: %d, number of samples: %d, AUC: %f' % (index_task, len(d_index_task_label_pred_test[index_task][0]), auc)
-            history_score.append(validation_score)
-            if validation_score < best_score:
+            weighted_train_score = train_score_sum / train_score_weight
+            print 'weighted_train_score', weighted_train_score
+            weighted_validation_score = validation_score_sum / validation_score_weight
+            print 'weighted_validation_score', weighted_validation_score
+            weighted_test_score = test_score_sum / test_score_weight
+            print 'weighted_test_score', weighted_test_score
+            history_score.append(weighted_validation_score)
+            if weighted_validation_score < best_score and (i - best_epoch) >= 3:
                 break
-            best_score = validation_score
+            if weighted_validation_score > best_score:
+                best_score = weighted_validation_score
+                best_epoch = i
             sys.stdout.flush()
         else:
             lst_train_pred = []
@@ -282,8 +306,10 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-6']:
 #for name in ['fm_l2_v_1e-6']:
 #for name in ['fwfm_l2_v_1e-5']:
+#for name in ['fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-5_lr_1e-5', 'fwfm_l2_v_1e-5_lr_5e-5']:
 #for name in ['MTLfwfm_l2_v_1e-5', 'MTLfwfm_lr_1e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5']:
-for name in ['fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-5_lr_1e-5', 'fwfm_l2_v_1e-5_lr_5e-5']:
+#for name in ['MTLfwfm_l2_v_1e-5']:
+for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
