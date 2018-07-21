@@ -839,7 +839,7 @@ class MultiTask_FwFM:
 
         print 'num_lines', num_lines
         init_vars = []
-        num_inputs = len(layer_sizes[0])-1 # Here we minus one to exclude line_id as a feature
+        num_inputs = len(layer_sizes[0])-1 # Here we minus one to exclude conv_type as a feature
         factor_order = layer_sizes[1]
         # Parameters initialization
         for i in range(num_inputs+1):
@@ -867,13 +867,13 @@ class MultiTask_FwFM:
                 # The dimension of b0 is only num_inputs since it's used only after lookup
                 b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
             xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs+1) if i != index_lines]
-
             with tf.device(gpu_device):
                 if has_field_bias:
                     x = tf.concat([xw[i] + b0[i] for i in range(num_inputs)], 1)
                 else:
                     x = tf.concat(xw, 1)
                     #x = tf.concat([xw[i] for i in range(num_inputs)], 1)
+                print 'x.shape', x.shape
                 l = tf.nn.dropout(
                     utils.activate(x, layer_acts[0]),
                     layer_keeps[0]
@@ -915,9 +915,13 @@ class MultiTask_FwFM:
                 )
 
                 p = tf.reshape(p, [-1, 1])
-
+                print 'b1.shape', b1.shape
+                print 'p.shape', p.shape
+                print 'l.shape', l.shape
                 l = utils.activate(
-                    tf.reshape(tf.reduce_sum(tf.multiply(l, w_l), 1), [-1, 1]) + b1 + p,
+                    tf.reshape(tf.reduce_sum(tf.multiply(l, w_l), 1), [-1, 1])
+                    + b1
+                    + p,
                     layer_acts[1])
 
                 for i in range(2, len(layer_sizes) - 1):
