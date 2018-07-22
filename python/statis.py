@@ -7,9 +7,10 @@ from scipy.stats.stats import pearsonr
 from scipy.stats import kendalltau
 
 class statis:
-    def __init__(self):
-        self.M = 15 # Number of fields.
+    def __init__(self, M=0):
+        self.M = M # Number of fields.
         self.k = 10 # Dimension of embedding vector.
+        self.n_task = -1
         self.d = {}
         self.d_idx2embedding = {}
         self.d_idx2idxField = {}
@@ -21,6 +22,7 @@ class statis:
         self.cnt_pos = 0.0
         self.cnt_neg = 0.0
         self.d_fieldPair_r = {}
+        self.d_conv_type_fieldPair_r = {}
 
     def load_model(self, path_model, model = 'fwfm'):
         self.d = pkl.load(open(path_model, 'rb'))
@@ -28,18 +30,29 @@ class statis:
         idx_last_field = 0
         name_last_field = '0'
         total_idx = 0
-        if model == 'fwfm':
+        if model == 'fwfm' or model == 'mtl-fwfm':
             for i in range(self.M):
                 d_field_i = self.d['w0_' + str(i)]
                 for j in range(len(d_field_i)):
                     self.d_idx2embedding[total_idx] = d_field_i[j]
                     total_idx += 1
-            idx = 0
-            for i in range(self.M):
-                for j in range(i+1, self.M):
-                    field_pair = str(i) + '_' + str(j)
-                    self.d_fieldPair_r[field_pair] = self.d['w_p'][idx][0]
-                    idx += 1
+            if model == 'fwfm':
+                idx = 0
+                for i in range(self.M):
+                    for j in range(i+1, self.M):
+                        field_pair = str(i) + '_' + str(j)
+                        self.d_fieldPair_r[field_pair] = self.d['w_p'][idx][0]
+                        idx += 1
+            elif model == 'mtl-fwfm':
+                self.n_task = len(self.d['r'])
+                for idx_task in range(len(self.d['r'])):
+                    idx = 0
+                    for i in range(self.M):
+                        for j in range(i+1, self.M):
+                            field_pair = str(i) + '_' + str(j)
+                            self.d_conv_type_fieldPair_r.setdefault(idx_task, {})
+                            self.d_conv_type_fieldPair_r[idx_task][field_pair] = self.d['r'][idx_task][idx]
+                            idx += 1
         elif model == 'ffm':
             for i in range(self.M):
                 d_field_i = self.d['w0_' + str(i)]
@@ -121,24 +134,35 @@ class statis:
         '''
         pass
 
-    def average_latent_vector_dot_product_for_field_pair(self, fi, fj, model ='fwfm'):
+    def average_latent_vector_dot_product_for_field_pair(self, fi, fj, model ='fwfm', n_task=0):
         sum = 0.0
         sum_abs = 0.0
         sum_cnt = 0.0
         uniq_fea_pair_cnt = 0.0
         field_pair = str(fi) + '_' + str(fj)
-        for feature_pair in self.d_fieldPair_featurePair[field_pair]:
-            cnt = self.d_fieldPair_featurePair[field_pair][feature_pair]['cnt']
-            r = 1
-            if model == 'fwfm':
+        if model == 'fwfm':
+            for feature_pair in self.d_fieldPair_featurePair[field_pair]:
+                cnt = self.d_fieldPair_featurePair[field_pair][feature_pair]['cnt']
                 r = self.d_fieldPair_r[field_pair]
-            fea_i, fea_j = map(int, feature_pair.split('_'))
-            dot = self.get_feature_dot_product(fea_i, fea_j, fi, fj, model)
-            sum += dot * cnt * r
-            sum_abs += abs(dot * r) * cnt 
-            sum_cnt += cnt
-            uniq_fea_pair_cnt += 1
-        return sum, sum_abs, sum_cnt, uniq_fea_pair_cnt
+                fea_i, fea_j = map(int, feature_pair.split('_'))
+                dot = self.get_feature_dot_product(fea_i, fea_j, fi, fj, model)
+                sum += dot * cnt * r
+                sum_abs += abs(dot * r) * cnt
+                sum_cnt += cnt
+                uniq_fea_pair_cnt += 1
+            return sum, sum_abs, sum_cnt, uniq_fea_pair_cnt
+        elif model == 'mtl-fwfm':
+            for feature_pair in self.d_fieldPair_featurePair[field_pair]:
+                cnt = self.d_fieldPair_featurePair[field_pair][feature_pair]['cnt']
+                r = self.d_conv_type_fieldPair_r[n_task][field_pair]
+                fea_i, fea_j = map(int, feature_pair.split('_'))
+                dot = self.get_feature_dot_product(fea_i, fea_j, fi, fj, model)
+                sum += dot * cnt * r
+                sum_abs += abs(dot * r) * cnt
+                sum_cnt += cnt
+                uniq_fea_pair_cnt += 1
+            return sum, sum_abs, sum_cnt, uniq_fea_pair_cnt, abs(r)
+
             
     def mutual_information(self, fi, fj):
         mi = 0.0
@@ -180,14 +204,36 @@ statis_n_feature(path2)
 path3 = '../data_cretio/train.txt.test.thres20.yx'
 statis_n_feature(path3)
 '''
+# View Content: 1, Purchase: 2, Sign Up: 3, Lead: 4
+n_field = 17
+path_model = 'model/MTLfwfm_lr_5e-5_l2_v_1e-5_yahoo_dataset2.2_epoch_72'
+path_data = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.Lead'
+index_task = 4
 
-statis = statis()
+def statis_mtl_fwfm_r(path_data, path_model):
+    s = statis(M=n_field)
+    print 'load data: %s' % path_data
+    s.load_data(path_data)
+    print 'load model: %s' % path_model
+    s.load_model(path_model, 'mtl-fwfm')
+    file = open(path_model + '.task_' + str(index_task), 'w')
+    file_r = open(path_model + '.task_' + str(index_task) + '.r', 'w')
+    for fi in range(n_field):
+        for fj in range(fi+1, n_field):
+            res = s.average_latent_vector_dot_product_for_field_pair(fi, fj, 'mtl-fwfm', index_task)
+            print 'fi: %d, fj" %d, sum: %f, sum_abs: %f, sum_cnt: %s, uniq_fea_pair_cnt: %f' % (fi, fj, res[0], res[1], res[2], res[3])
+            file.write(str(res[1] / res[2]) + '\n')
+            file_r.write(str(res[4]) + '\n')
+    file.close()
+    file_r.close()
+
+statis_mtl_fwfm_r(path_data, path_model)
+'''
 #print 'load feature index'
 #sys.stdout.flush()
 #statis.load_feature_index('../data_yahoo/dataset2/featindex_25m_thres10.txt')
 sys.stdout.flush()
 #statis.load_data('../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx')
-statis.load_data('../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.Sign_Up')
 sys.stdout.flush()
 #statis.load_model('model/yahoo_dataset2.2_fwfm_epoch_2', 'fwfm')
 #statis.load_model('model/ffm_l2_v_1e-7_lr_1e-4_yahoo_epoch_2', 'ffm')
@@ -200,6 +246,7 @@ for fi in range(17):
         print res
         #res = statis.get_field_pair_pearson_corr_with_label(i,j)
         #print '%d\t%d\t%f\t%f' % (i, j, res[0], res[1])
+'''
 
 def main_kendalltau():
     path_mi = 'data/yahoo_mi'
