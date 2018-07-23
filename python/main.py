@@ -91,10 +91,14 @@ def train(model, name, in_memory = True, flag_MTL = True):
         validation_data = utils.read_data(validation_file, INPUT_DIM)
         test_data = utils.read_data(test_file, INPUT_DIM)
         model_name = name.split('_')[0]
-        if model_name in ['fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2', 'fm', 'fwfm', 'MTLfwfm']:
+        if model_name in set(['fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2', 'fwfm', 'MTLfwfm']):
             train_data = utils.split_data(train_data, FIELD_OFFSETS)
             validation_data = utils.split_data(validation_data, FIELD_OFFSETS)
             test_data = utils.split_data(test_data, FIELD_OFFSETS)
+        elif model_name in set(['lr', 'fm']):
+            train_data_tmp = utils.split_data(train_data, FIELD_OFFSETS)
+            validation_data_tmp = utils.split_data(validation_data, FIELD_OFFSETS)
+            test_data_tmp = utils.split_data(test_data, FIELD_OFFSETS)
     for i in range(num_round):
         fetches = [model.optimizer, model.loss]
         if batch_size > 0:
@@ -159,9 +163,14 @@ def train(model, name, in_memory = True, flag_MTL = True):
                 d_index_task_label_pred_train = {}
                 d_index_task_label_pred_validation = {}
                 d_index_task_label_pred_test = {}
-                index_task_train = train_data[0][-1].indices
-                index_task_validation = validation_data[0][-1].indices
-                index_task_test = test_data[0][-1].indices
+                if model_name in set(['lr', 'fm']):
+                    index_task_train = train_data_tmp[0][-1].indices
+                    index_task_validation = validation_data_tmp[0][-1].indices
+                    index_task_test = test_data_tmp[0][-1].indices
+                else:
+                    index_task_train = train_data[0][-1].indices
+                    index_task_validation = validation_data[0][-1].indices
+                    index_task_test = test_data[0][-1].indices
                 for index_tmp in range(len(index_task_train)):
                     index_task = index_task_train[index_tmp]
                     d_index_task_label_pred_train.setdefault(index_task, [[],[]])
@@ -274,9 +283,12 @@ def train(model, name, in_memory = True, flag_MTL = True):
 def mapConf2Model(name):
     conf = d_name_conf[name]
     # 'layer_sizes': [field_sizes, 10, 1],
-    conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
-    print 'conf', conf
     model_name = name.split('_')[0]
+    if model_name != 'lr' and model_name != 'fm':
+        conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
+    else:
+        conf['input_dim'] = INPUT_DIM
+    print 'conf', conf
     if model_name == 'ffm':
         return FFM(**conf)
     elif model_name == 'fwfm':
@@ -308,8 +320,10 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-5']:
 #for name in ['fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-5_lr_1e-5', 'fwfm_l2_v_1e-5_lr_5e-5']:
 #for name in ['MTLfwfm_l2_v_1e-5', 'MTLfwfm_lr_1e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5']:
+#for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
 #for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
-for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
+#for name in ['lr_l2_1e-7', 'fm_l2_v_1e-6']:
+for name in ['fm_l2_v_1e-6']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)

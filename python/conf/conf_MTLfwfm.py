@@ -20,16 +20,15 @@ conf_default = {
     'num_lines': -1
 }
 
-d_name_conf['MTLfwfm_l2_v_1e-5'] =  conf_default.copy()
-
-d_name_conf['MTLfwfm_lr_1e-5_l2_v_1e-5'] = conf_default.copy()
-d_name_conf['MTLfwfm_lr_1e-5_l2_v_1e-5']['learning_rate'] = 1e-5
-
-d_name_conf['MTLfwfm_lr_5e-5_l2_v_1e-5'] = conf_default.copy()
-d_name_conf['MTLfwfm_lr_5e-5_l2_v_1e-5']['learning_rate'] = 5e-5
-
+conf = conf_default.copy()
+d_name_conf['MTLfwfm_l2_v_1e-5'] =  conf
 
 conf = conf_default.copy()
 conf['learning_rate'] = 5e-5
 conf['l2_dict']['v'] = 5e-5
 d_name_conf['MTLfwfm_lr_5e-5_l2_v_5e-5'] = conf
+
+conf = conf_default.copy()
+conf['learning_rate'] = 5e-5
+d_name_conf['MTLfwfm_lr_5e-5_l2_v_1e-5'] = conf
+
