@@ -1,67 +1,67 @@
 import time 
 import sys
-import os
-import shutil
-import json
 from sklearn.metrics import roc_auc_score
-from scipy.sparse import coo_matrix
-import tensorflow as tf
 import numpy as np
 from time import gmtime, strftime
-import pickle as pkl
-from itertools import islice
+import configparser
 from conf.conf_fwfm import *
 from conf.conf_MTLfwfm import *
 from conf.conf_ffm import *
 from conf.conf_lr import *
 from conf.conf_fm import *
-#from conf.conf_fwfmoh import *
+from conf.conf_DINN import *
 
 import utils
-from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM, FwFM_LE, MultiTask_FwFM
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM, FwFM_LE, MultiTask_FwFM, DINN
 
+config = configparser.ConfigParser()
+config.read(sys.argv[1])
+path_train = config['setup']['path_train']
+path_validation = config['setup']['path_validation']
+path_test = config['setup']['path_test']
+path_feature_index = config['setup']['path_feature_index']
 # Criteo CTR data set
-#train_file = '/tmp/jwpan/data_criteo/train.txt.train.thres20.yx'
-#test_file = '/tmp/jwpan/data_criteo/train.txt.validation.thres20.yx'
-#test_file = '/tmp/jwpan/data_criteo/train.txt.test.thres20.yx'
-#train_file = '/tmp/jwpan/data_criteo/train.txt.train.thres20.ffm10.0.yx'
-#test_file = '/tmp/jwpan/data_criteo/train.txt.test.thres20.ffm10.0.yx'
+#path_train = '/tmp/jwpan/data_criteo/train.txt.train.thres20.yx'
+#path_test = '/tmp/jwpan/data_criteo/train.txt.validation.thres20.yx'
+#path_test = '/tmp/jwpan/data_criteo/train.txt.test.thres20.yx'
+#path_train = '/tmp/jwpan/data_criteo/train.txt.train.thres20.ffm10.0.yx'
+#path_test = '/tmp/jwpan/data_criteo/train.txt.test.thres20.ffm10.0.yx'
 
 # Yahoo CTR data set
-#train_file = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.10k'
-#test_file = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx.10k'
-#train_file = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
-#test_file = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
-#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
-#train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm2.8.yx'
-#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.ffm2.8.yx'
-#train_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm12.6.yx'
-#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
-#test_file = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
+#path_train = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx.10k'
+#path_test = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx.10k'
+#path_train = '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx'
+#path_test = '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+#path_test = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx'
+#path_train = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm2.8.yx'
+#path_test = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.ffm2.8.yx'
+#path_train = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.ffm12.6.yx'
+#path_test = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.ffm12.6.yx'
+#path_test = '/tmp/jwpan/data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx'
 
 # Yahoo CVR data set
-train_file = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx'
-validation_file = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx'
-test_file = '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx'
+#path_train = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.10k'
+#path_validation = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx.10k'
+#path_test = '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx.10k'
 
 # fm_model_file = '../data/fm.model.txt'
-print "train_file: ", train_file
-print "validation_file: ", validation_file
-print "test_file: ", test_file
+print "path_train: ", path_train
+print "path_validation: ", path_validation
+print "path_test: ", path_test
 sys.stdout.flush()
 
-#path_feature_map = '../data_yahoo/dataset2/featindex_25m_thres10.txt'
-path_feature_map = '../data_cvr/featureindex_thres5.txt'
+#path_feature_index = '../data_yahoo/dataset2/featindex_25m_thres10.txt'
+#path_feature_index = '../data_cvr/featureindex_thres5.txt'
 #path_saved_model = 'model'
 #if os.path.exists(path_saved_model) and os.path.isdir(path_saved_model):
 #    shutil.rmtree(path_saved_model)
-INPUT_DIM, FIELD_OFFSETS, FIELD_SIZES = utils.initiate(path_feature_map)
+INPUT_DIM, FIELD_OFFSETS, FIELD_SIZES = utils.initiate(path_feature_index)
 
 print 'FIELD_SIZES', FIELD_SIZES
 
-train_label = utils.read_label(train_file)
-validation_label = utils.read_label(validation_file)
-test_label = utils.read_label(test_file)
+train_label = utils.read_label(path_train)
+validation_label = utils.read_label(path_validation)
+test_label = utils.read_label(path_test)
 
 train_size = train_label.shape[0]
 validation_size = validation_label.shape[0]
@@ -87,11 +87,11 @@ def train(model, name, in_memory = True, flag_MTL = True):
     print 'epochs\tloss\ttrain-auc\teval-auc\ttime'
     sys.stdout.flush()
     if in_memory:
-        train_data = utils.read_data(train_file, INPUT_DIM)
-        validation_data = utils.read_data(validation_file, INPUT_DIM)
-        test_data = utils.read_data(test_file, INPUT_DIM)
+        train_data = utils.read_data(path_train, INPUT_DIM)
+        validation_data = utils.read_data(path_validation, INPUT_DIM)
+        test_data = utils.read_data(path_test, INPUT_DIM)
         model_name = name.split('_')[0]
-        if model_name in set(['fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2', 'fwfm', 'MTLfwfm']):
+        if model_name in set(['fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2', 'fm', 'fwfm', 'MTLfwfm', 'DINN']):
             train_data = utils.split_data(train_data, FIELD_OFFSETS)
             validation_data = utils.split_data(validation_data, FIELD_OFFSETS)
             test_data = utils.split_data(test_data, FIELD_OFFSETS)
@@ -109,7 +109,7 @@ def train(model, name, in_memory = True, flag_MTL = True):
                     _, l = model.run(fetches, X_i, y_i)
                     ls.append(l)
             else:
-                f = open(train_file, 'r')
+                f = open(path_train, 'r')
                 lst_lines = []
                 for line in f:
                     if len(lst_lines) < batch_size:
@@ -221,7 +221,7 @@ def train(model, name, in_memory = True, flag_MTL = True):
             lst_train_pred = []
             lst_test_pred = []
             if batch_size > 0:
-                f = open(train_file, 'r')
+                f = open(path_train, 'r')
                 lst_lines = []
                 for line in f:
                     if len(lst_lines) < batch_size:
@@ -236,7 +236,7 @@ def train(model, name, in_memory = True, flag_MTL = True):
                     X_i, y_i = utils.slice(utils.process_lines(lst_lines, name, INPUT_DIM, FIELD_OFFSETS), 0, -1)
                     _train_preds = model.run(model.y_prob, X_i)
                     lst_train_pred.append(_train_preds)
-                f = open(test_file, 'r')
+                f = open(path_test, 'r')
                 lst_lines = []
                 for line in f:
                     if len(lst_lines) < batch_size:
@@ -282,7 +282,6 @@ def train(model, name, in_memory = True, flag_MTL = True):
 
 def mapConf2Model(name):
     conf = d_name_conf[name]
-    # 'layer_sizes': [field_sizes, 10, 1],
     model_name = name.split('_')[0]
     if model_name != 'lr' and model_name != 'fm':
         conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
@@ -303,6 +302,8 @@ def mapConf2Model(name):
         conf['index_lines'] = utils.index_lines
         conf['num_lines'] = FIELD_SIZES[utils.index_lines]
         return MultiTask_FwFM(**conf)
+    elif model_name == 'DINN':
+        return DINN(**conf)
 
 #for name in ['ffm_l2_v_1e-7_lr_1e-1', 'ffm_l2_v_1e-7_lr_1e-2', 'ffm_l2_v_1e-7_lr_1e-3', 'ffm_l2_v_1e-7_lr_1e-4', 'ffm_l2_v_1e-7_lr_1e-5', 'ffm_l2_v_1e-7_lr_1e-6']:
 #for name in ['lr_l2_1e-7', 'lr_l2_1e-8', 'lr_l2_1e-9']:
@@ -322,10 +323,10 @@ def mapConf2Model(name):
 #for name in ['MTLfwfm_l2_v_1e-5', 'MTLfwfm_lr_1e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5']:
 #for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
 #for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
-#for name in ['lr_l2_1e-7', 'fm_l2_v_1e-6']:
-for name in ['fm_l2_v_1e-6']:
+#for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
+for name in ['DINN_lr_1e-4_l2_v_1e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
-    train(model, name + '_yahoo_dataset2.2', True)
+    train(model, name + '_yahoo_dataset2.2', in_memory=True, flag_MTL=True)
     #train(model, name + '_criteo')

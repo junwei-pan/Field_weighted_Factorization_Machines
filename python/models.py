@@ -1,8 +1,11 @@
 import cPickle as pkl
-
 import tensorflow as tf
-
 import utils
+import numpy as np
+from math import factorial
+
+def comb(n, k):
+    return int( factorial(n) / factorial(k) / factorial(n - k) )
 
 dtype = utils.DTYPE
 
@@ -965,6 +968,226 @@ class MultiTask_FwFM:
             var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at ', model_path
+
+
+class DINN:
+    def __init__(self, layer_sizes=None, allLayer2=True, layer_acts=None, layer_keeps=None, layer_l2=None, \
+                 kernel_l2=None, init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, \
+                 has_field_bias=False, l2_dict=None):
+        """
+        # Arguments:
+            layer_size: [num_fields, factor_layer, l_p size]
+            layer_acts: ["tanh", "none"]
+            layer_keep: [1, 1]
+            layer_l2: [0, 0]
+            kernel_l2: 0
+        """
+
+        print'layer_sizes', layer_sizes
+        num_fields = len(layer_sizes[0])  # Number of fields, i.e., M
+        print'num_fields', str(num_fields)
+        embd_card = layer_sizes[1]
+        print'embd_card', str(embd_card)
+        print 'layer_sizes', layer_sizes
+        num_layers = layer_sizes[3]
+        print'num_layers', str(num_layers)
+
+        init_vars = []
+        num_inputs = len(layer_sizes[0])  # Number of fields, i.e., M
+        factor_order = layer_sizes[1]
+        for i in range(num_inputs):
+            layer_input = layer_sizes[0][i]
+            layer_output = factor_order
+            # w0 store the embeddings for all features.
+            init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
+            init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
+
+        for i in range(3, num_layers):
+            init_vars.append(('w_pooling_%d' % i, [layer_sizes[5][i - 1] * num_fields, embd_card], 'tnormal', dtype))
+
+        init_vars.append(('w_l', [num_inputs * embd_card, layer_sizes[2]], 'tnormal', dtype))
+        init_vars.append(('w2', [comb(num_fields, 2), embd_card], 'tnormal', dtype))
+        init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
+
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+
+            indexes_Left_Deep = [[], [], []]
+            indexes_Right_Deep = [[], [], []]
+            for i in range(3, num_layers):
+                indexes_Left_Deep.append(
+                    tf.constant(np.repeat(np.arange(layer_sizes[5][i - 1]), num_fields), dtype=tf.int32))
+                indexes_Right_Deep.append(
+                    tf.constant(np.tile(np.arange(num_fields), layer_sizes[5][i - 1]), dtype=tf.int32))
+
+            with tf.device(gpu_device):
+                if random_seed is not None:
+                    tf.set_random_seed(random_seed)
+                self.X = [tf.sparse_placeholder(dtype, name='x' + str(i)) for i in range(num_inputs)]
+                self.y = tf.placeholder(dtype)
+                self.vars = utils.init_var_map(init_vars, init_path)
+                w0 = [self.vars['w0_%d' % i] for i in range(num_inputs)]
+                b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
+                w_pooling = [self.vars['w_pooling_%d' % i] for i in range(3, num_layers)]
+            # Multiply SparseTensor X[i] by dense matrix w0[i]
+            xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs)]
+            # xw = [x / tf.norm(x) for x in xw]
+
+            with tf.device(gpu_device):
+                if has_field_bias:
+                    x = tf.concat([xw[i] + b0[i] for i in range(num_inputs)], 1)
+                else:
+                    x = tf.concat([xw[i] for i in range(num_inputs)], 1)
+                l = tf.nn.dropout(
+                    utils.activate(x, layer_acts[0]),
+                    layer_keeps[0])
+
+                w_l = self.vars['w_l']
+                w2 = self.vars['w2']
+                # w_p = self.vars['w_p']
+                b1 = self.vars['b1']
+                # This is where W_p \cdot p happens.
+                # k1 is \theta, which is the weight for each field(feature) vector
+
+            index_left = []
+            index_right = []
+
+            for i in range(num_inputs):
+                for j in range(num_inputs - i - 1):
+                    index_left.append(i)
+                    index_right.append(i + j + 1)
+
+            with tf.device(gpu_device):
+                dirImport = 0
+                l_trans = tf.reshape(l, [-1, num_inputs, factor_order])
+                combToBeUsedInNext = [0, 0]
+                for i in range(2, num_layers):
+                    combToBeUsedInNext.append(0)
+                print "l_trans.get_shape()"
+                print l_trans.get_shape()
+                for i in range(2, num_layers):
+                    current_layer = i
+                    print 'current_layer: ', str(current_layer)
+                    if current_layer == 2:
+                        l_left = tf.gather(l_trans, index_left, axis=1)
+                        print "l_left.get_shape()"
+                        print l_left.get_shape()
+
+                        l_right = tf.gather(l_trans, index_right, axis=1)
+                        print "l_right.get_shape()"
+                        print l_right.get_shape()
+
+                        p2 = tf.multiply(l_left, l_right)
+                        print "p2.get_shape()"
+                        print p2.get_shape()
+
+                        p2W = tf.multiply(p2, w2)
+                        print "p2W.get_shape()"
+                        print p2W.get_shape()
+
+                        p2W_lessDim2 = tf.reduce_sum(p2W, 2)
+                        print "p2W_lessDim2.get_shape()"
+                        print p2W_lessDim2.get_shape()
+                        p2W_oneDimAbs = tf.reduce_sum(tf.abs(p2W_lessDim2), 0)
+                        print "p2W_oneDimAbs.get_shape()"
+                        print p2W_oneDimAbs.get_shape()
+
+                        [_, topCurrIndexes] = tf.nn.top_k(
+                            p2W_oneDimAbs,
+                            k=layer_sizes[4][current_layer],
+                            sorted=True,
+                            name=None
+                        )
+
+                        if allLayer2:
+                            dirImport += tf.reduce_sum(p2W_lessDim2, axis=1, keep_dims=True)
+                        else:
+                            dirImport += tf.reduce_sum(tf.gather(p2W_lessDim2, topCurrIndexes, axis=1), axis=1,
+                                                       keep_dims=True)
+
+                        combToBeUsedInNext[2] = tf.gather(p2, topCurrIndexes[0:layer_sizes[5][current_layer]], axis=1)
+                        print "combToBeUsedInNext.get_shape()"
+                        print combToBeUsedInNext[2].get_shape()
+                    else:
+                        print "indexes_Left_Deep[current_layer].get_shape()"
+                        print indexes_Left_Deep[current_layer].get_shape()
+
+                        x_left = tf.gather(combToBeUsedInNext[current_layer - 1], indexes_Left_Deep[current_layer],
+                                           axis=1)
+                        print "x_left.get_shape()"
+                        print x_left.get_shape()
+
+                        x_right = tf.gather(l_trans, indexes_Right_Deep[current_layer], axis=1)
+                        print "x_right.get_shape()"
+                        print x_right.get_shape()
+
+                        pComb = tf.multiply(x_left, x_right)
+                        print "pComb.get_shape()"
+                        print pComb.get_shape()
+
+                        pCombW = tf.multiply(pComb, w_pooling[current_layer - 3])
+                        print "pCombW.get_shape()"
+                        print pCombW.get_shape()
+
+                        pCombW_lessDim2 = tf.reduce_sum(pCombW, 2)
+                        print "p2W_lessDim2.get_shape()"
+                        print pCombW_lessDim2.get_shape()
+
+                        pCombWAbs_lessDim2 = tf.reduce_sum(tf.abs(pCombW_lessDim2), 0)
+                        print "pCombWAbs_lessDim2.get_shape()"
+                        print pCombWAbs_lessDim2.get_shape()
+
+                        [_, topCurrIndexes] = tf.nn.top_k(
+                            pCombWAbs_lessDim2,
+                            k=layer_sizes[4][current_layer],
+                            sorted=True,
+                            name=None
+                        )
+
+                        print '1147', 1147
+                        dirImport += tf.reduce_sum(tf.gather(pCombW_lessDim2, topCurrIndexes, axis=1), axis=1,
+                                                   keep_dims=True)
+                        print '1150', 1150
+                        if current_layer < num_layers - 1:
+                            combToBeUsedInNext[current_layer] = tf.gather(pComb, topCurrIndexes[
+                                                                                 0:layer_sizes[5][current_layer]],
+                                                                          axis=1)
+                            print "combToBeUsedInNext.get_shape()"
+                            print combToBeUsedInNext[current_layer].get_shape()
+
+                print '1158', 1158
+                l = utils.activate(
+                    tf.matmul(l, w_l) + b1 + dirImport,
+                    layer_acts[1])
+
+                self.y_prob = tf.sigmoid(l, name='y')
+
+                self.loss = tf.reduce_mean(
+                    tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))
+
+                self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
+
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+            config.gpu_options.allow_growth = True
+            config.log_device_placement = False
+            self.sess = tf.Session(config=config)
+            with tf.device(gpu_device):
+                tf.global_variables_initializer().run(session=self.sess)
+
+    def run(self, fetches, X=None, y=None):
+        feed_dict = {}
+        for i in range(len(X)):
+            feed_dict[self.X[i]] = X[i]
+        if y is not None:
+            feed_dict[self.y] = y
+        return self.sess.run(fetches, feed_dict)
+
+    def dump(self, model_path):
+        var_map = {}
+        for name, var in self.vars.iteritems():
+            var_map[name] = self.sess.run(var)
+        pkl.dump(var_map, open(model_path, 'wb'))
+        print 'model dumped at', model_path
 
 class FwFM_LE:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,

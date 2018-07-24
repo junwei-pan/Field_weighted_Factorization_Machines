@@ -1,13 +1,16 @@
 import cPickle as pkl
-
+import sys
 import numpy as np
 import tensorflow as tf
-from itertools import islice
+import configparser
 from scipy.sparse import coo_matrix
+
+config = configparser.ConfigParser()
+config.read(sys.argv[1])
 
 DTYPE = tf.float32
 
-FIELD_SIZES = [0] * 18
+FIELD_SIZES = [0] * int(config['setup']['num_field'])
 index_lines = 17
 d_name_conf = {}
 FIELD_OFFSETS = []
