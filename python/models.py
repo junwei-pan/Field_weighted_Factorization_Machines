@@ -1063,34 +1063,34 @@ class DINN:
                 combToBeUsedInNext = [0, 0]
                 for i in range(2, num_layers):
                     combToBeUsedInNext.append(0)
-                print "l_trans.get_shape()"
-                print l_trans.get_shape()
+                #print "l_trans.get_shape()"
+                #print l_trans.get_shape()
                 for i in range(2, num_layers):
                     current_layer = i
-                    print 'current_layer: ', str(current_layer)
+                    #print 'current_layer: ', str(current_layer)
                     if current_layer == 2:
                         l_left = tf.gather(l_trans, index_left, axis=1)
-                        print "l_left.get_shape()"
-                        print l_left.get_shape()
+                        #print "l_left.get_shape()"
+                        #print l_left.get_shape()
 
                         l_right = tf.gather(l_trans, index_right, axis=1)
-                        print "l_right.get_shape()"
-                        print l_right.get_shape()
+                        #print "l_right.get_shape()"
+                        #print l_right.get_shape()
 
                         p2 = tf.multiply(l_left, l_right)
-                        print "p2.get_shape()"
-                        print p2.get_shape()
+                        #print "p2.get_shape()"
+                        #print p2.get_shape()
 
                         p2W = tf.multiply(p2, w2)
-                        print "p2W.get_shape()"
-                        print p2W.get_shape()
+                        #print "p2W.get_shape()"
+                        #print p2W.get_shape()
 
                         p2W_lessDim2 = tf.reduce_sum(p2W, 2)
-                        print "p2W_lessDim2.get_shape()"
-                        print p2W_lessDim2.get_shape()
+                        #print "p2W_lessDim2.get_shape()"
+                        #print p2W_lessDim2.get_shape()
                         p2W_oneDimAbs = tf.reduce_sum(tf.abs(p2W_lessDim2), 0)
-                        print "p2W_oneDimAbs.get_shape()"
-                        print p2W_oneDimAbs.get_shape()
+                        #print "p2W_oneDimAbs.get_shape()"
+                        #print p2W_oneDimAbs.get_shape()
 
                         [_, topCurrIndexes] = tf.nn.top_k(
                             p2W_oneDimAbs,
@@ -1106,36 +1106,36 @@ class DINN:
                                                        keep_dims=True)
 
                         combToBeUsedInNext[2] = tf.gather(p2, topCurrIndexes[0:layer_sizes[5][current_layer]], axis=1)
-                        print "combToBeUsedInNext.get_shape()"
-                        print combToBeUsedInNext[2].get_shape()
+                        #print "combToBeUsedInNext.get_shape()"
+                        #print combToBeUsedInNext[2].get_shape()
                     else:
-                        print "indexes_Left_Deep[current_layer].get_shape()"
-                        print indexes_Left_Deep[current_layer].get_shape()
+                        #print "indexes_Left_Deep[current_layer].get_shape()"
+                        #print indexes_Left_Deep[current_layer].get_shape()
 
                         x_left = tf.gather(combToBeUsedInNext[current_layer - 1], indexes_Left_Deep[current_layer],
                                            axis=1)
-                        print "x_left.get_shape()"
-                        print x_left.get_shape()
+                        #print "x_left.get_shape()"
+                        #print x_left.get_shape()
 
                         x_right = tf.gather(l_trans, indexes_Right_Deep[current_layer], axis=1)
-                        print "x_right.get_shape()"
-                        print x_right.get_shape()
+                        #print "x_right.get_shape()"
+                        #print x_right.get_shape()
 
                         pComb = tf.multiply(x_left, x_right)
-                        print "pComb.get_shape()"
-                        print pComb.get_shape()
+                        #print "pComb.get_shape()"
+                        #print pComb.get_shape()
 
                         pCombW = tf.multiply(pComb, w_pooling[current_layer - 3])
-                        print "pCombW.get_shape()"
-                        print pCombW.get_shape()
+                        #print "pCombW.get_shape()"
+                        #print pCombW.get_shape()
 
                         pCombW_lessDim2 = tf.reduce_sum(pCombW, 2)
-                        print "p2W_lessDim2.get_shape()"
-                        print pCombW_lessDim2.get_shape()
+                        #print "p2W_lessDim2.get_shape()"
+                        #print pCombW_lessDim2.get_shape()
 
                         pCombWAbs_lessDim2 = tf.reduce_sum(tf.abs(pCombW_lessDim2), 0)
-                        print "pCombWAbs_lessDim2.get_shape()"
-                        print pCombWAbs_lessDim2.get_shape()
+                        #print "pCombWAbs_lessDim2.get_shape()"
+                        #print pCombWAbs_lessDim2.get_shape()
 
                         [_, topCurrIndexes] = tf.nn.top_k(
                             pCombWAbs_lessDim2,
@@ -1144,18 +1144,15 @@ class DINN:
                             name=None
                         )
 
-                        print '1147', 1147
                         dirImport += tf.reduce_sum(tf.gather(pCombW_lessDim2, topCurrIndexes, axis=1), axis=1,
                                                    keep_dims=True)
-                        print '1150', 1150
                         if current_layer < num_layers - 1:
                             combToBeUsedInNext[current_layer] = tf.gather(pComb, topCurrIndexes[
                                                                                  0:layer_sizes[5][current_layer]],
                                                                           axis=1)
-                            print "combToBeUsedInNext.get_shape()"
-                            print combToBeUsedInNext[current_layer].get_shape()
+                            #print "combToBeUsedInNext.get_shape()"
+                            #print combToBeUsedInNext[current_layer].get_shape()
 
-                print '1158', 1158
                 l = utils.activate(
                     tf.matmul(l, w_l) + b1 + dirImport,
                     layer_acts[1])

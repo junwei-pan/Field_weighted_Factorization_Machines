@@ -283,9 +283,9 @@ def train(model, name, in_memory = True, flag_MTL = True):
 def mapConf2Model(name):
     conf = d_name_conf[name]
     model_name = name.split('_')[0]
-    if model_name != 'lr' and model_name != 'fm':
-        conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
-    else:
+    #if model_name != 'lr' and model_name != 'fm' and model_name != 'DINN':
+    #    conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
+    if model_name in set(['lr', 'fm']):
         conf['input_dim'] = INPUT_DIM
     print 'conf', conf
     if model_name == 'ffm':
@@ -324,6 +324,7 @@ def mapConf2Model(name):
 #for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
 #for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
 #for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
+#for name in ['MTLfwfm_lr_5e-5_l2_v_5e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-6', 'MTLfwfm_lr_5e-5_l2_v_1e-5_l2_r_1e-5']:
 for name in ['DINN_lr_1e-4_l2_v_1e-5']:
     print 'name with none activation', name
     sys.stdout.flush()

@@ -13,8 +13,9 @@ config['setup'] = {'path_train': '../data_cvr/cvr_imp_20180704_0710_conv_2018070
 with open('conf/project/cvr.ini', 'w') as configfile:
     config.write(configfile)
 
+# Click, Yahoo
 config = configparser.ConfigParser()
-config['cvr_yahoo'] = {'path_train': '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx',
+config['setup'] = {'path_train': '../data_yahoo/dataset2/ctr_20170517_0530_0.015.txt.thres10.yx',
                        'path_validation': '../data_yahoo/dataset2/ctr_20170531.txt.downsample_all.0.1.thres10.yx',
                        'path_test': '../data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1.thres10.yx',
                        'path_feature_index': '../data_yahoo/dataset2/featindex_25m_thres10.txt',
