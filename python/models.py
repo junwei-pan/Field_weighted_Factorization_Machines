@@ -827,7 +827,7 @@ class FwFM:
 class MultiTask_FwFM:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None, int_path=None,
                  opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=False, l2_dict=None,
-                 num_lines=None, index_lines=None):
+                 num_lines=None, index_lines=None, flag_r_factorized=True):
         """
         :param layer_sizes: [num_fields, factor_layer, l_p size]
         :param layer_acts:
@@ -853,6 +853,7 @@ class MultiTask_FwFM:
             init_vars.append(('b0_%d' % i, [factor_order], 'zero', dtype)) # ? Why layer_output?
         init_vars.append(('w_l', [num_lines, num_inputs * factor_order], 'tnormal', dtype))
         init_vars.append(('r', [num_lines, num_inputs*(num_inputs-1)/2], 'tnormal', dtype))
+        init_vars.append(('r_factorized', [num_lines, num_inputs, factor_order], 'tnormal', dtype))
         init_vars.append(('b1', [num_lines, layer_sizes[2]], 'zero', dtype))
         self.graph = tf.Graph()
         with self.graph.as_default():
@@ -886,18 +887,31 @@ class MultiTask_FwFM:
                 #b1 = self.vars['b1']
                 #w_p = self.vars['r_1' ]
 
-            r = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['r'])
-            w_l = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['w_l'])
-            b1 = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['b1'])
-            w_l = tf.reshape(w_l, [-1, num_inputs * factor_order])
-            b1 = tf.reshape(b1, [-1, layer_sizes[2]])
-
             index_left = []
             index_right = []
             for i in range(num_inputs):
                 for j in range(num_inputs - i - 1):
                     index_left.append(i)
                     index_right.append(i+j+1)
+            if flag_r_factorized:
+                r_factorized = self.vars['r_factorized']
+                r_product = []
+                for i in range(num_lines):
+                    r_factorized_i = tf.convert_to_tensor(r_factorized[i,:])
+                    r_left = tf.gather(r_factorized_i, index_left)
+                    r_right = tf.gather(r_factorized_i, index_right)
+                    r_p = tf.multiply(r_left, r_right)
+                    r_p = tf.reduce_sum(r_p, 1)
+                    r_product.append(r_p)
+                r = tf.sparse_tensor_dense_matmul(self.X[index_lines], r_product)
+                #r_factorized = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['r_factorized'])
+            else:
+                r = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['r'])
+
+            w_l = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['w_l'])
+            b1 = tf.sparse_tensor_dense_matmul(self.X[index_lines], self.vars['b1'])
+            w_l = tf.reshape(w_l, [-1, num_inputs * factor_order])
+            b1 = tf.reshape(b1, [-1, layer_sizes[2]])
 
             with tf.device(gpu_device):
                 l_trans = tf.transpose(tf.reshape(l, [-1, num_inputs, factor_order]), [1,0,2])

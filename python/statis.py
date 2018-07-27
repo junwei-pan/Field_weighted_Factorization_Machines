@@ -15,6 +15,7 @@ class statis:
         self.d_idx2embedding = {}
         self.d_idx2idxField = {}
         self.lst_fea = []
+        self.set_fea = set([])
         self.lst_label = []
         self.d_indexField_feature = {} # key: fi, value: {feature: frequency}
         self.d_fieldPair_featurePair = {} # key: fi_fj, value: {fea_i_fea_j: frequency}
@@ -74,6 +75,8 @@ class statis:
             self.d_idx2idxField[idx] = idx_field
 
     def load_data(self, path):
+        cnt_pos = 0
+        cnt_neg = 0
         bin = 100000
         for idx_line, line in enumerate(open(path)):
             self.cnt_sample += 1
@@ -89,6 +92,7 @@ class statis:
             lst_fea = [int(x.split(':')[0]) for x in lst[1:]]
             for i in range(len(lst_fea)):
                 fea = lst_fea[i]
+                self.set_fea.add(fea)
                 self.d_indexField_feature.setdefault(i, {})
                 self.d_indexField_feature[i].setdefault(fea, 0)
                 self.d_indexField_feature[i][fea] += 1
@@ -101,11 +105,32 @@ class statis:
                     self.d_fieldPair_featurePair[field_pair][feature_pair]['cnt'] += 1
                     if label == 1:
                         self.d_fieldPair_featurePair[field_pair][feature_pair]['pos'] += 1
-
+                        cnt_pos += 1
                     else:
                         self.d_fieldPair_featurePair[field_pair][feature_pair]['neg'] += 1
+                        cnt_neg += 1
             self.lst_fea.append(lst_fea)
             self.lst_label.append(label)
+        print 'len(self.set_fea)', len(self.set_fea)
+        print 'cnt_pos: %d, cnt_neg: %d, cvr: %f' % (cnt_pos, cnt_neg, cnt_pos * 1.0 / (cnt_pos + cnt_neg))
+
+    def basic_statistics(self, path_data):
+        print path_data
+        cnt_pos = 0
+        cnt_neg = 0
+        for line in open(path_data):
+            lst = line.strip('\n').split(' ')
+            label = int(lst[0])
+            lst_fea = [int(x.split(':')[0]) for x in lst[1:]]
+            for i in range(len(lst_fea)):
+                fea = lst_fea[i]
+                self.set_fea.add(fea)
+                if label == 1:
+                    cnt_pos += 1
+                else:
+                    cnt_neg += 1
+        print 'len(self.set_fea)', len(self.set_fea)
+        print 'cnt_total: %d, cnt_pos: %d, cnt_neg: %d, cvr: %f' % (cnt_pos + cnt_neg, cnt_pos, cnt_neg, cnt_pos * 1.0 / (cnt_pos + cnt_neg))
 
     def get_feature_dot_product(self, i, j, fi, fj, model = 'fm'):
         if model == 'ffm':
@@ -207,8 +232,8 @@ statis_n_feature(path3)
 # View Content: 1, Purchase: 2, Sign Up: 3, Lead: 4
 n_field = 17
 path_model = 'model/MTLfwfm_lr_5e-5_l2_v_1e-5_yahoo_dataset2.2_epoch_72'
-path_data = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.Lead'
-index_task = 4
+path_data = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.Purchase'
+index_task = 2
 
 def statis_mtl_fwfm_r(path_data, path_model):
     s = statis(M=n_field)
@@ -227,7 +252,13 @@ def statis_mtl_fwfm_r(path_data, path_model):
     file.close()
     file_r.close()
 
+def statis_feature_and_label_for_dataset(path_data):
+    s = statis(M=n_field)
+    s.basic_statistics(path_data)
+
 statis_mtl_fwfm_r(path_data, path_model)
+#statis_feature_and_label_for_dataset('../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx.Lead')
+
 '''
 #print 'load feature index'
 #sys.stdout.flush()

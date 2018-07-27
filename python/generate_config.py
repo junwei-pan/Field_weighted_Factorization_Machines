@@ -3,14 +3,27 @@ import configparser
 # CVR, Yahoo
 config = configparser.ConfigParser()
 config['setup'] = {'path_train': '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx',
-                       'path_validation': '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx',
-                       'path_test': '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx',
+                   'path_validation': '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx',
+                   'path_test': '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx',
+                   'path_feature_index': '../data_cvr/featureindex_thres5.txt',
+                   'num_field': 18
+
+                   }
+
+with open('conf/project/cvr.ini', 'w') as configfile:
+    config.write(configfile)
+
+# CVR, Yahoo
+config = configparser.ConfigParser()
+config['setup'] = {'path_train': '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.10k',
+                       'path_validation': '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx.10k',
+                       'path_test': '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx.10k',
                        'path_feature_index': '../data_cvr/featureindex_thres5.txt',
                        'num_field': 18
 
                     }
 
-with open('conf/project/cvr.ini', 'w') as configfile:
+with open('conf/project/cvr_10k.ini', 'w') as configfile:
     config.write(configfile)
 
 # Click, Yahoo
