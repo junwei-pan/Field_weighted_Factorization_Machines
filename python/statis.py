@@ -31,7 +31,7 @@ class statis:
         idx_last_field = 0
         name_last_field = '0'
         total_idx = 0
-        if model == 'fwfm' or model == 'mtl-fwfm':
+        if model == 'fwfm' or model == 'mtl-fwfm' or model == 'mtl-fwfm-r-factorized':
             for i in range(self.M):
                 d_field_i = self.d['w0_' + str(i)]
                 for j in range(len(d_field_i)):
@@ -54,6 +54,14 @@ class statis:
                             self.d_conv_type_fieldPair_r.setdefault(idx_task, {})
                             self.d_conv_type_fieldPair_r[idx_task][field_pair] = self.d['r'][idx_task][idx]
                             idx += 1
+            elif model == 'mtl-fwfm-r-factorized':
+                self.n_task = len(self.d['r_factorized'])
+                for idx_task in range(self.n_task):
+                    for i in range(self.M):
+                        for j in range(i+1, self.M):
+                            field_pair = str(i) + '_' + str(j)
+                            self.d_conv_type_fieldPair_r.setdefault(idx_task, {})
+                            self.d_conv_type_fieldPair_r[idx_task][field_pair] = np.dot(self.d['r_factorized'][idx_task][i], self.d['r_factorized'][idx_task][j])
         elif model == 'ffm':
             for i in range(self.M):
                 d_field_i = self.d['w0_' + str(i)]
@@ -176,7 +184,7 @@ class statis:
                 sum_cnt += cnt
                 uniq_fea_pair_cnt += 1
             return sum, sum_abs, sum_cnt, uniq_fea_pair_cnt
-        elif model == 'mtl-fwfm':
+        elif model == 'mtl-fwfm' or model == 'mtl-fwfm-r-factorized':
             for feature_pair in self.d_fieldPair_featurePair[field_pair]:
                 cnt = self.d_fieldPair_featurePair[field_pair][feature_pair]['cnt']
                 r = self.d_conv_type_fieldPair_r[n_task][field_pair]
@@ -230,23 +238,26 @@ path3 = '../data_cretio/train.txt.test.thres20.yx'
 statis_n_feature(path3)
 '''
 # View Content: 1, Purchase: 2, Sign Up: 3, Lead: 4
+d_index_task = {1: 'View_Content', 2: 'Purchase', 3: 'Sign_Up', 4: 'Lead'}
+index_task = 3
 n_field = 17
-path_model = 'model/MTLfwfm_lr_5e-5_l2_v_1e-5_yahoo_dataset2.2_epoch_72'
-path_data = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.Purchase'
-index_task = 2
+#path_model = 'model/MTLfwfm_lr_5e-5_l2_v_1e-5_yahoo_dataset2.2_epoch_72'
+#path_model = 'model/MTLfwfm_r_factorized_lr_5e-5_yahoo_dataset2.2_epoch_50'
+path_model = 'model/MTLfwfm_r_factorized_lr_5e-5_l2_r_1e-5_yahoo_dataset2.2_epoch_46'
+path_data = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.' + d_index_task[index_task]
 
-def statis_mtl_fwfm_r(path_data, path_model):
+def statis_mtl_fwfm_r(path_data, path_model, model='fwfm'):
     s = statis(M=n_field)
     print 'load data: %s' % path_data
     s.load_data(path_data)
     print 'load model: %s' % path_model
-    s.load_model(path_model, 'mtl-fwfm')
+    s.load_model(path_model, model)
     file = open(path_model + '.task_' + str(index_task), 'w')
     file_r = open(path_model + '.task_' + str(index_task) + '.r', 'w')
     for fi in range(n_field):
         for fj in range(fi+1, n_field):
-            res = s.average_latent_vector_dot_product_for_field_pair(fi, fj, 'mtl-fwfm', index_task)
-            print 'fi: %d, fj" %d, sum: %f, sum_abs: %f, sum_cnt: %s, uniq_fea_pair_cnt: %f' % (fi, fj, res[0], res[1], res[2], res[3])
+            res = s.average_latent_vector_dot_product_for_field_pair(fi, fj, model, index_task)
+            print 'fi: %d, fj: %d, sum: %f, sum_abs: %f, sum_cnt: %s, uniq_fea_pair_cnt: %f' % (fi, fj, res[0], res[1], res[2], res[3])
             file.write(str(res[1] / res[2]) + '\n')
             file_r.write(str(res[4]) + '\n')
     file.close()
@@ -256,7 +267,7 @@ def statis_feature_and_label_for_dataset(path_data):
     s = statis(M=n_field)
     s.basic_statistics(path_data)
 
-statis_mtl_fwfm_r(path_data, path_model)
+statis_mtl_fwfm_r(path_data, path_model, model='mtl-fwfm-r-factorized')
 #statis_feature_and_label_for_dataset('../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx.Lead')
 
 '''

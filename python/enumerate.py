@@ -35,23 +35,45 @@ for i in range(n):
     for j in range(n):
         res.append(d[i][j])
     print '\t'.join(map(str, res))
-
+MIN = 100
+MAX = -1
 lst = []
+lst_norm = []
 lst_with_index = []
 for i in range(n):
     l = []
     for j in range(n):
-        l.append(d[i][j])
-        lst_with_index.append([float(d[i][j]), i, j])
+        #l.append(d[i][j])
+        v = float(d[i][j])
+        l.append(v)
+        lst_with_index.append([v, i, j])
+        if v < MIN and v != 0:
+            MIN = v
+        if v > MAX:
+            MAX = v
     lst.append(l)
+
+print 'MIN', MIN
+print 'MAX', MAX
+for i in range(n):
+    l_norm = [(x-MIN)/(MAX-MIN) if x != 0 else x for x in lst[i]]
+    lst_norm.append(l_norm)
+
+
+for i in range(n):
+    for j in range(n):
+        print i,j,lst_norm[i][j]
 
 # View Content: 1, Purchase: 2, Sign Up: 3, Lead: 4
 sort = sorted(lst_with_index, key=lambda x:x[0], reverse=True)
 for i in range(10):
-    print sort[i][0], lst_field[sort[i][1]], lst_field[sort[i][2]]
+    print sort[2*i][0], lst_field[sort[2*i][1]], lst_field[sort[2*i][2]]
 
 with open(sys.argv[1] + '.json', 'w') as out:
     json.dump(lst, out)
+
+with open(sys.argv[1] + '.norm.json', 'w') as out:
+    json.dump(lst_norm, out)
 
 
 '''
