@@ -13,7 +13,7 @@ from conf.conf_fm import *
 from conf.conf_DINN import *
 
 import utils
-from models_opt import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FwFM3, FFM, FwFM_LE, MultiTask_FwFM, DINN
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FwFM3, FFM, FwFM_LE, MultiTask_FwFM, DINN
 
 config = configparser.ConfigParser()
 config.read(sys.argv[1])
@@ -328,8 +328,8 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
 #for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
 #for name in ['DINN_lr_1e-4_l2_v_1e-5']:
-#for name in ['fwfm3']:
-for name in ['MTLfwfm_l2_v_1e-5']:
+for name in ['fwfm3']:
+#for name in ['MTLfwfm_l2_v_1e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
