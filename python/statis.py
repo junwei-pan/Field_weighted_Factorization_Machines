@@ -257,13 +257,12 @@ d_index_field = {0: 'publisher_id',
                  10: 'account_id',
                  11: 'ad_id',
                  12: 'creative_id',
-                 13: 'creative_media_id',
-                 14: 'device_type_id',
-                 15: 'line_id',
-                 16: 'user_id'}
+                 13: 'device_type_id',
+                 14: 'line_id',
+                 15: 'user_id'}
 num_task = len(d_index_task.keys())
 index_task = 3
-n_field = 17
+n_field = 16
 #path_model = 'model/MTLfwfm_lr_5e-5_l2_v_1e-5_yahoo_dataset2.2_epoch_72'
 #path_model = 'model/MTLfwfm_r_factorized_lr_5e-5_yahoo_dataset2.2_epoch_50'
 #path_model = 'model/MTLfwfm_r_factorized_lr_5e-5_l2_r_1e-5_yahoo_dataset2.2_epoch_46'
@@ -312,7 +311,7 @@ def statis_pearson_correlation():
 
 #statis_mtl_fwfm_r(path_data, path_model, model='mtl-fwfm')
 print 'd_index_field', d_index_field
-statis_feature_and_label_for_dataset('../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx.Lead',d_index_field=d_index_field)
+statis_feature_and_label_for_dataset('../data_cvr2/cvr_imp_20180715_0721_conv_20180715_0727.csv.add_conv_type.thres5.yx.Lead', d_index_field=d_index_field)
 #statis_pearson_correlation()
 
 '''
