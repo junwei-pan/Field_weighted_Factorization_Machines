@@ -4,6 +4,7 @@ from sklearn.metrics import roc_auc_score
 import numpy as np
 from time import gmtime, strftime
 import configparser
+from conf.conf_fwfm3 import *
 from conf.conf_fwfm import *
 from conf.conf_MTLfwfm import *
 from conf.conf_ffm import *
@@ -12,7 +13,7 @@ from conf.conf_fm import *
 from conf.conf_DINN import *
 
 import utils
-from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FFM, FwFM_LE, MultiTask_FwFM, DINN
+from models import LR, FM, PNN1, PNN1_Fixed, PNN2, FNN, CCPM, Fast_CTR, Fast_CTR_Concat, FwFM, FwFM3, FFM, FwFM_LE, MultiTask_FwFM, DINN
 
 config = configparser.ConfigParser()
 config.read(sys.argv[1])
@@ -91,14 +92,14 @@ def train(model, name, in_memory = True, flag_MTL = True):
         validation_data = utils.read_data(path_validation, INPUT_DIM)
         test_data = utils.read_data(path_test, INPUT_DIM)
         model_name = name.split('_')[0]
-        if model_name in set(['fnn', 'ccpm', 'pnn1', 'pnn1_fixed', 'pnn2', 'fm', 'fwfm', 'MTLfwfm', 'DINN']):
-            train_data = utils.split_data(train_data, FIELD_OFFSETS)
-            validation_data = utils.split_data(validation_data, FIELD_OFFSETS)
-            test_data = utils.split_data(test_data, FIELD_OFFSETS)
-        elif model_name in set(['lr', 'fm']):
+        if model_name in set(['lr', 'fm']):
             train_data_tmp = utils.split_data(train_data, FIELD_OFFSETS)
             validation_data_tmp = utils.split_data(validation_data, FIELD_OFFSETS)
             test_data_tmp = utils.split_data(test_data, FIELD_OFFSETS)
+        else:
+            train_data = utils.split_data(train_data, FIELD_OFFSETS)
+            validation_data = utils.split_data(validation_data, FIELD_OFFSETS)
+            test_data = utils.split_data(test_data, FIELD_OFFSETS)
     for i in range(num_round):
         fetches = [model.optimizer, model.loss]
         if batch_size > 0:
@@ -292,6 +293,8 @@ def mapConf2Model(name):
         return FFM(**conf)
     elif model_name == 'fwfm':
         return FwFM(**conf)
+    elif model_name == 'fwfm3':
+        return FwFM3(**conf)
     elif model_name == 'fm':
         return FM(**conf)
     elif model_name == 'lr':
@@ -325,9 +328,11 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
 #for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
 #for name in ['DINN_lr_1e-4_l2_v_1e-5']:
-for name in ['MTLfwfm_r_factorized']:
+for name in ['fwfm3']:
+#for name in ['MTLfwfm_l2_v_1e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
     train(model, name + '_yahoo_dataset2.2', in_memory=True, flag_MTL=True)
+
     #train(model, name + '_criteo')

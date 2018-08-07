@@ -690,6 +690,158 @@ class PNN1_Fixed:
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
+class FwFM3:
+    def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,
+                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=False, \
+                 l2_dict=None, fullLayer3 = True, survivors = 15):
+        """
+        # Arguments:
+            layer_size: [num_fields, factor_layer, l_p size]
+            layer_acts: ["tanh", "none"]
+            layer_keep: [1, 1]
+            layer_l2: [0, 0]
+            kernel_l2: 0
+        """
+        init_vars = []
+        num_inputs = len(layer_sizes[0]) # Number of fields, i.e., M
+        factor_order = layer_sizes[1]
+        for i in range(num_inputs):
+            layer_input = layer_sizes[0][i] # Number of unique features for field i
+            layer_output = factor_order
+            # w0 store the embeddings for all features.
+            init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
+            init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
+        init_vars.append(('w_l', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
+        init_vars.append(('w_p', [num_inputs * (num_inputs-1)/2, layer_sizes[2]], 'tnormal', dtype))
+        init_vars.append(('w_3', [num_inputs * (num_inputs-1)/2, num_inputs], 'tnormal', dtype))
+        #init_vars.append(('w1', [num_inputs * factor_order + num_inputs * num_inputs, layer_sizes[2]], 'tnormal', dtype))
+        init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
+        for i in range(2, len(layer_sizes) - 1):
+            layer_input = layer_sizes[i]
+            layer_output = layer_sizes[i + 1]
+            init_vars.append(('w%d' % i, [layer_input, layer_output], 'tnormal', dtype))
+            init_vars.append(('b%d' % i, [layer_output], 'zero', dtype))
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+            with tf.device(gpu_device):
+                if random_seed is not None:
+                    tf.set_random_seed(random_seed)
+                self.X = [tf.sparse_placeholder(dtype, name='x' + str(i)) for i in range(num_inputs)]
+                self.y = tf.placeholder(dtype)
+                self.vars = utils.init_var_map(init_vars, init_path)
+                w0 = [self.vars['w0_%d' % i] for i in range(num_inputs)]
+                b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
+            # Multiply SparseTensor X[i] by dense matrix w0[i]
+            xw = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) for i in range(num_inputs)]
+            # xw = [x / tf.norm(x) for x in xw]
+
+            with tf.device(gpu_device):
+                if has_field_bias:
+                    x = tf.concat([xw[i] + b0[i] for i in range(num_inputs)], 1)
+                else:
+                    x = tf.concat([xw[i] for i in range(num_inputs)], 1)
+                l = tf.nn.dropout(
+                    utils.activate(x, layer_acts[0]),
+                    layer_keeps[0])
+
+                w_l = self.vars['w_l']
+                w_p = self.vars['w_p']
+                w_3 = self.vars['w_3']
+                b1 = self.vars['b1']
+                # This is where W_p \cdot p happens.
+                # k1 is \theta, which is the weight for each field(feature) vector
+
+            index_left = []
+            index_right = []
+
+            for i in range(num_inputs):
+                for j in range(i+1,num_inputs):
+                    index_left.append(i)
+                    index_right.append(j)
+
+            with tf.device(gpu_device):
+                l_ = tf.reshape(l, [-1, num_inputs, factor_order])
+                l_left = tf.gather(l_, index_left, axis = 1)
+                l_right = tf.gather(l_, index_right, axis =1)
+                p_full = tf.multiply(l_left, l_right)
+                p = tf.reduce_sum(p_full, 2)
+                p = tf.nn.dropout(
+                    utils.activate(
+                        tf.matmul(p, w_p),
+                        'none'
+                    ),
+                    layer_keeps[1]
+                )
+
+                ## Now for the Interaction Layer 3
+                l_trans = tf.transpose(l_, [ 0, 2, 1])
+                p3_full = tf.matmul(p_full, l_trans)
+                p3_full = tf.multiply(p3_full, w_3)
+                p3 = tf.reduce_sum(p3_full, 2)
+
+                if fullLayer3:
+                    p3 = tf.reduce_sum(p3, 1, keep_dims = True)
+                
+                else:
+                    [_, top_indexes] = tf.nn.top_k(
+                        tf.abs(p3),
+                        k=survivors,
+                        sorted=True,
+                        name=None
+                    )
+                    p3 = tf.reduce_sum(tf.gather(p3, top_indexes, axis = 1), 1, keep_dims = True)
+
+                l = utils.activate(
+                        tf.matmul(l, w_l) + b1 + p + p3,
+                        layer_acts[1])
+
+                for i in range(2, len(layer_sizes) - 1):
+                    wi = self.vars['w%d' % i]
+                    bi = self.vars['b%d' % i]
+                    l = tf.nn.dropout(
+                        utils.activate(
+                            tf.matmul(l, wi) + bi,
+                            layer_acts[i]),
+                        layer_keeps[i])
+
+                self.y_prob = tf.sigmoid(l, name='y')
+                self.loss = tf.reduce_mean(
+                    tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))
+                # l2 regularization for the linear weights, embeddings and r
+                if l2_dict is not None:
+                    if l2_dict.has_key('linear_w'):
+                        self.loss += l2_dict['linear_w'] * tf.nn.l2_loss(w_l)
+                    if l2_dict.has_key('r'):
+                        self.loss += l2_dict['r'] * tf.nn.l2_loss(w_p)
+                    if l2_dict.has_key('v'):
+                        for i in range(num_inputs):
+                            self.loss += l2_dict['v'] * tf.nn.l2_loss(self.vars['w0_%d' % i])
+
+                self.optimizer = utils.get_optimizer(opt_algo, learning_rate, self.loss)
+
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+            config.gpu_options.allow_growth = True
+            config.log_device_placement=False
+            self.sess = tf.Session(config=config)
+            with tf.device(gpu_device):
+                tf.global_variables_initializer().run(session=self.sess)
+
+    def run(self, fetches, X=None, y=None):
+        feed_dict = {}
+        for i in range(len(X)):
+            feed_dict[self.X[i]] = X[i]
+        if y is not None:
+            feed_dict[self.y] = y
+        return self.sess.run(fetches, feed_dict)
+
+    def dump(self, model_path):
+        var_map = {}
+        for name, var in self.vars.iteritems():
+            var_map[name] = self.sess.run(var)
+        pkl.dump(var_map, open(model_path, 'wb'))
+        print 'model dumped at', model_path
+
+ 
 class FwFM:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=False, l2_dict=None):
@@ -752,31 +904,27 @@ class FwFM:
             index_right = []
 
             for i in range(num_inputs):
-                for j in range(num_inputs - i - 1):
+                for j in range(i + 1, num_inputs):
                     index_left.append(i)
-                    index_right.append(i + j + 1)
+                    index_right.append(j)
 
             with tf.device(gpu_device):
-                l_trans = tf.transpose(tf.reshape(l, [-1, num_inputs, factor_order]), [1, 0, 2])
-                l_left = tf.gather(l_trans, index_left)
-                l_right = tf.gather(l_trans, index_right)
-                p = tf.transpose(tf.multiply(l_left, l_right), [1, 0, 2])
-                p = tf.reduce_sum(p, 2)
+                l_ = tf.reshape(l, [-1, num_inputs, factor_order])
+                l_left = tf.gather(l_, index_left, axis = 1)
+                l_right = tf.gather(l_, index_right, axis = 1)
+                p_full = tf.multiply(l_left, l_right)
+                p = tf.reduce_sum(p_full, 2)
+
                 p = tf.nn.dropout(
                     utils.activate(
-                        tf.matmul(
-                            tf.reshape(p, [-1, num_inputs*(num_inputs-1)/2]),
-                            w_p),
+                        tf.matmul(p, w_p),
                         'none'
                     ),
                     layer_keeps[1]
                 )
 
-                print 'p.get_shape()', p.get_shape()
-
-                l = utils.activate(
-                        tf.matmul(l, w_l) + b1 + p,
-                        layer_acts[1])
+                l = utils.activate(tf.matmul(l, w_l) + b1 + p, 
+                    layer_acts[1])
 
                 for i in range(2, len(layer_sizes) - 1):
                     wi = self.vars['w%d' % i]
@@ -827,7 +975,7 @@ class FwFM:
 class MultiTask_FwFM:
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None, int_path=None,
                  opt_algo='gd', learning_rate=1e-2, random_seed=None, has_field_bias=False, l2_dict=None,
-                 num_lines=None, index_lines=None, flag_r_factorized=True):
+                 num_lines=None, index_lines=None, flag_r_factorized=False):
         """
         :param layer_sizes: [num_fields, factor_layer, l_p size]
         :param layer_acts:
@@ -890,9 +1038,9 @@ class MultiTask_FwFM:
             index_left = []
             index_right = []
             for i in range(num_inputs):
-                for j in range(num_inputs - i - 1):
+                for j in range(i + 1, num_inputs):
                     index_left.append(i)
-                    index_right.append(i+j+1)
+                    index_right.append(j)
             if flag_r_factorized:
                 r_factorized = self.vars['r_factorized']
                 r_product = []
@@ -914,29 +1062,21 @@ class MultiTask_FwFM:
             b1 = tf.reshape(b1, [-1, layer_sizes[2]])
 
             with tf.device(gpu_device):
-                l_trans = tf.transpose(tf.reshape(l, [-1, num_inputs, factor_order]), [1,0,2])
-                l_left = tf.gather(l_trans, index_left)
-                l_right = tf.gather(l_trans, index_right)
-                p = tf.transpose(tf.multiply(l_left, l_right), [1,0,2])
+                l_ = tf.reshape(l, [-1, num_inputs, factor_order])
+                l_left = tf.gather(l_, index_left, axis = 1)
+                l_right = tf.gather(l_, index_right, axis = 1)
+                p = tf.multiply(l_left, l_right)
                 p = tf.reduce_sum(p, 2)
-
                 p = tf.nn.dropout(
                     utils.activate(
                         tf.reduce_sum(
-                            tf.multiply(
-                                tf.reshape(p, [-1, num_inputs*(num_inputs-1)/2]),
-                                tf.reshape(r, [-1, num_inputs*(num_inputs-1)/2])),
-                            1),
+                            tf.multiply(p, r), 
+                            1, keep_dims = True),
                         'none'),
                     layer_keeps[1]
                 )
 
-                p = tf.reshape(p, [-1, 1])
-                print 'b1.shape', b1.shape
-                print 'p.shape', p.shape
-                print 'l.shape', l.shape
-                l = utils.activate(
-                    tf.reshape(tf.reduce_sum(tf.multiply(l, w_l), 1), [-1, 1])
+                l = utils.activate(tf.reduce_sum(tf.multiply(l, w_l), 1, keep_dims = True)
                     + b1
                     + p,
                     layer_acts[1])
@@ -982,8 +1122,7 @@ class MultiTask_FwFM:
             var_map[name] = self.sess.run(var)
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at ', model_path
-
-
+        
 class DINN:
     def __init__(self, layer_sizes=None, allLayer2=True, layer_acts=None, layer_keeps=None, layer_l2=None, \
                  kernel_l2=None, init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, \
