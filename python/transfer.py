@@ -30,9 +30,9 @@ thres = 10
 # 0: publisher_id, 1: page_tld, 2: subdomain, 3: layout_id, 4: user_local_day_of_week,
 # 5: user_local_hour, 6: gender, 7: ad_placement_id, 8: ad_position_id, 9: age, 10: account_id,
 # 11: ad_id, 12: creative_id, 13: creative_media_id, 14: device_type_id, 15: line_id, 16: user_id, 17: conv_type
-index_label = 22
+index_label = 21
 index_cat_start = 0
-num_fields = 18
+num_fields = 17
 lst_index_cat = range(index_cat_start, index_cat_start+num_fields)
 thres = 5
 
@@ -63,11 +63,11 @@ path_test = '../data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1'
 '''
 
 # Conversion Data Set
-dir = '../data_ctr'
-path_train = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type'
-path_validation = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type'
-path_test = '../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type'
-path_fea_index = '../data_cvr/featureindex_thres%d.txt' % thres
+dir = '../data_cvr2'
+path_train = dir + '/cvr_imp_20180708_0714_conv_20180708_0720.csv.add_conv_type'
+path_validation = dir + '/cvr_imp_20180715_0721_conv_20180715_0727.csv.add_conv_type'
+path_test = dir + '/cvr_imp_20180722_0728_conv_20180722_0803.csv.add_conv_type'
+path_fea_index = dir + '/featureindex_thres%d.txt' % thres
 
 batch = 100000
 

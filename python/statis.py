@@ -122,7 +122,8 @@ class statis:
         print 'len(self.set_fea)', len(self.set_fea)
         print 'cnt_pos: %d, cnt_neg: %d, cvr: %f' % (cnt_pos, cnt_neg, cnt_pos * 1.0 / (cnt_pos + cnt_neg))
 
-    def basic_statistics(self, path_data):
+    def basic_statistics(self, path_data, d_index_field={}):
+        print 'd_index_field', d_index_field
         print path_data
         cnt_pos = 0
         cnt_neg = 0
@@ -133,11 +134,15 @@ class statis:
             for i in range(len(lst_fea)):
                 fea = lst_fea[i]
                 self.set_fea.add(fea)
-                if label == 1:
-                    cnt_pos += 1
-                else:
-                    cnt_neg += 1
+                self.d_indexField_feature.setdefault(i, {})
+                self.d_indexField_feature[i].setdefault(fea, 0)
+            if label == 1:
+                cnt_pos += 1
+            else:
+                cnt_neg += 1
         print 'len(self.set_fea)', len(self.set_fea)
+        for i in range(self.M):
+            print i, d_index_field[i], len(self.d_indexField_feature[i].keys())
         print 'cnt_total: %d, cnt_pos: %d, cnt_neg: %d, cvr: %f' % (cnt_pos + cnt_neg, cnt_pos, cnt_neg, cnt_pos * 1.0 / (cnt_pos + cnt_neg))
 
     def get_feature_dot_product(self, i, j, fi, fj, model = 'fm'):
@@ -239,14 +244,35 @@ statis_n_feature(path3)
 '''
 # View Content: 1, Purchase: 2, Sign Up: 3, Lead: 4
 d_index_task = {1: 'View_Content', 2: 'Purchase', 3: 'Sign_Up', 4: 'Lead'}
+d_index_field = {0: 'publisher_id',
+                 1: 'page_tld',
+                 2: 'subdomain',
+                 3: 'layout_id',
+                 4: 'user_local_day_of_week',
+                 5: 'user_local_hour',
+                 6: 'gender',
+                 7: 'ad_placement_id',
+                 8: 'ad_position_id',
+                 9: 'age',
+                 10: 'account_id',
+                 11: 'ad_id',
+                 12: 'creative_id',
+                 13: 'creative_media_id',
+                 14: 'device_type_id',
+                 15: 'line_id',
+                 16: 'user_id'}
+num_task = len(d_index_task.keys())
 index_task = 3
 n_field = 17
 #path_model = 'model/MTLfwfm_lr_5e-5_l2_v_1e-5_yahoo_dataset2.2_epoch_72'
 #path_model = 'model/MTLfwfm_r_factorized_lr_5e-5_yahoo_dataset2.2_epoch_50'
-path_model = 'model/MTLfwfm_r_factorized_lr_5e-5_l2_r_1e-5_yahoo_dataset2.2_epoch_46'
-path_data = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.' + d_index_task[index_task]
+#path_model = 'model/MTLfwfm_r_factorized_lr_5e-5_l2_r_1e-5_yahoo_dataset2.2_epoch_46'
+path_model = 'model/MTLfwfm_lr_5e-5_l2_v_1e-5_yahoo_dataset2.2_epoch_83'
+#path_data = '../data_cvr/cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.thres5.yx.' + d_index_task[index_task]
+path_data = '../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx.' + d_index_task[index_task]
 
 def statis_mtl_fwfm_r(path_data, path_model, model='fwfm'):
+    # Possible argument for model: fwfm, mtl-fwfm, mtl-fwfm-r-factorized
     s = statis(M=n_field)
     print 'load data: %s' % path_data
     s.load_data(path_data)
@@ -263,12 +289,31 @@ def statis_mtl_fwfm_r(path_data, path_model, model='fwfm'):
     file.close()
     file_r.close()
 
-def statis_feature_and_label_for_dataset(path_data):
+def statis_feature_and_label_for_dataset(path_data, d_index_field={}):
     s = statis(M=n_field)
-    s.basic_statistics(path_data)
+    s.basic_statistics(path_data, d_index_field)
 
-statis_mtl_fwfm_r(path_data, path_model, model='mtl-fwfm-r-factorized')
-#statis_feature_and_label_for_dataset('../data_cvr/cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.thres5.yx.Lead')
+def statis_pearson_correlation():
+    d_conv_type_mi = {}
+    d_conv_type_r = {}
+    for index_task in d_index_task.keys():
+        conv_type = d_index_task[index_task]
+        print conv_type
+        d_conv_type_mi[conv_type] = load_list('data/mi_cvr_' + conv_type.lower())
+        #d_conv_type_r[conv_type] = load_list('model/MTLfwfm_lr_5e-5_l2_v_1e-5_yahoo_dataset2.2_epoch_72.task_' + str(index_task) + '.r')
+        d_conv_type_r[conv_type] = load_list('model/MTLfwfm_r_factorized_lr_5e-5_yahoo_dataset2.2_epoch_50.task_' + str(index_task) + '.r')
+    for i in range(num_task):
+        for j in range(num_task):
+            index_i = i + 1
+            index_j = j + 1
+            conv_type_i = d_index_task[index_i]
+            conv_type_j = d_index_task[index_j]
+            print conv_type_i, conv_type_j, round(pearsonr(d_conv_type_mi[conv_type_i], d_conv_type_r[conv_type_j])[0], 2)
+
+#statis_mtl_fwfm_r(path_data, path_model, model='mtl-fwfm')
+print 'd_index_field', d_index_field
+statis_feature_and_label_for_dataset('../data_cvr/cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.thres5.yx.Lead',d_index_field=d_index_field)
+#statis_pearson_correlation()
 
 '''
 #print 'load feature index'

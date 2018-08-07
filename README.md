@@ -116,3 +116,17 @@ There are totally 15 Fields, and 156,393 unique features(with number of occurenc
 |DEVICE_TYPE_ID|4|
 |LINE_ID|2,530|
 |USER_ID|73,696|
+
+# Conversion Prediction Data Set
+
+## Generate Data Set based on revenue_fact_orc table
+
+Please refer to repo [CTR Data Generation](https://git.ouroath.com/jwpan/CTR_Data_Generation/tree/master/Conversion_Data_Generation) for details.
+
+## Get conversion type for each line
+
+Run [generate_samples_from_impression_log_and_line_conversion_type.py](https://git.ouroath.com/jwpan/CTR_Data_Generation/blob/master/Conversion_Data_Generation/generate_samples_from_impression_log_and_line_conversion_type.py) to get the conversion type for each line.
+
+## Transfer
+
+Transfer data format.
