@@ -1,10 +1,10 @@
 d_index_conv_type = {
-    '34884': 'View_Content',
-    '34885': 'Purchase',
-    '34886': 'Sign_Up',
-    '34887': 'Lead'
+    '54555': 'View_Content',
+    '54556': 'Purchase',
+    '54557': 'Sign_Up',
+    '54558': 'Lead'
 }
-path_data = '../data_cvr2/cvr_imp_20180722_0728_conv_20180722_0803.csv.add_conv_type.thres5.yx'
+path_data = '../data_cvr2/cvr_imp_20180708_0714_conv_20180708_0720.csv.add_conv_type.thres5.yx'
 
 def split_by_conv_type(path):
     d_index_file = {}
