@@ -325,11 +325,11 @@ def mapConf2Model(name):
 #for name in ['fwfm_l2_v_1e-5', 'fwfm_l2_v_1e-5_lr_1e-5', 'fwfm_l2_v_1e-5_lr_5e-5']:
 #for name in ['MTLfwfm_l2_v_1e-5', 'MTLfwfm_lr_1e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5']:
 #for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
-#for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
 #for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_5e-5']:
 #for name in ['DINN_lr_1e-4_l2_v_1e-5']:
 #for name in ['MTLfwfm_r_factorized_lr_5e-5', 'MTLfwfm_r_factorized_lr_1e-5', 'MTLfwfm_r_factorized_lr_5e-5_l2_r_1e-5']:
-for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5']
+#for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5']:
+for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)

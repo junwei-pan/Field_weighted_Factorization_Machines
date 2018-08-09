@@ -11,7 +11,7 @@ config.read(sys.argv[1])
 DTYPE = tf.float32
 
 FIELD_SIZES = [0] * int(config['setup']['num_field'])
-index_lines = 17
+index_lines = int(config['setup']['num_field']) - 1
 d_name_conf = {}
 FIELD_OFFSETS = []
 INPUT_DIM = 0
