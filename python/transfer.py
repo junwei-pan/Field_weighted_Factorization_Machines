@@ -63,10 +63,11 @@ path_test = '../data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1'
 '''
 
 # Conversion Data Set
-dir = '../data_cvr2'
+dir = '../data_cvr3'
+dir_4 = '../data_cvr4'
 path_train = dir + '/cvr_imp_20180708_0714_conv_20180708_0720.csv.add_conv_type'
-path_validation = dir + '/cvr_imp_20180715_0721_conv_20180715_0727.csv.add_conv_type'
-path_test = dir + '/cvr_imp_20180722_0728_conv_20180722_0803.csv.add_conv_type'
+path_validation = dir_4 + '/cvr_imp_20180715_0721_conv_20180715_0727.csv.add_conv_type'
+path_test = dir_4 + '/cvr_imp_20180722_0728_conv_20180722_0803.csv.add_conv_type'
 path_fea_index = dir + '/featureindex_thres%d.txt' % thres
 
 batch = 100000
@@ -228,6 +229,19 @@ def create_yx(path, mode, model='fm', d=14, k=2):
     print "number of samples with all rare features: ", cnt_filter
     file.close()
 
+def rebalance(path, d={}):
+    file = open(path + '.rebalanced', 'w')
+    for line in open(path):
+        lst = line.strip('\n').split(' ')
+        cls = int(lst[-1].split(':')[0])
+        if d.has_key(cls):
+            repeat = d[cls]
+            for i in range(repeat):
+                file.write(line)
+        else:
+            file.write(line)
+    file.close()
+
 # To generate several data sets for FFM with different hashing space.
 '''
 d = num_fields - 1
@@ -265,4 +279,8 @@ create_yx(path_train, 'train', model)
 create_yx(path_validation, 'train', model)
 create_yx(path_test, 'train', model)
 #create_yx(path_test, 'train', model)
+
+#path_train_yx = path_train + '.thres5.yx'
+#rebalance(path_train_yx, d={54337: 20})
+
 

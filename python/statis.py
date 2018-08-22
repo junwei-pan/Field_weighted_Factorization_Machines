@@ -311,7 +311,7 @@ def statis_pearson_correlation():
 
 #statis_mtl_fwfm_r(path_data, path_model, model='mtl-fwfm')
 print 'd_index_field', d_index_field
-statis_feature_and_label_for_dataset('../data_cvr2/cvr_imp_20180708_0714_conv_20180708_0720.csv.add_conv_type.thres5.yx.Lead', d_index_field=d_index_field)
+statis_feature_and_label_for_dataset('../data_cvr2/cvr_imp_20180715_0721_conv_20180715_0727.csv.add_conv_type.thres5.yx.View_Content', d_index_field=d_index_field)
 #statis_pearson_correlation()
 
 '''
