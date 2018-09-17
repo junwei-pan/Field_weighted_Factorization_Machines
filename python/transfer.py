@@ -63,11 +63,10 @@ path_test = '../data_yahoo/dataset2/ctr_20170601.txt.downsample_all.0.1'
 '''
 
 # Conversion Data Set
-dir = '../data_cvr3'
-dir_4 = '../data_cvr4'
-path_train = dir + '/cvr_imp_20180708_0714_conv_20180708_0720.csv.add_conv_type'
-path_validation = dir_4 + '/cvr_imp_20180715_0721_conv_20180715_0727.csv.add_conv_type'
-path_test = dir_4 + '/cvr_imp_20180722_0728_conv_20180722_0803.csv.add_conv_type'
+dir = '../data/data_cvr/'
+path_train = dir + 'cvr_imp_20180704_0710_conv_20180704_0716.csv.add_conv_type.remove_conv_type'
+path_validation = dir + 'cvr_imp_20180711_conv_20180711_0717.csv.add_conv_type.remove_conv_type'
+path_test = dir + 'cvr_imp_20180712_conv_20180712_0718.csv.add_conv_type.remove_conv_type'
 path_fea_index = dir + '/featureindex_thres%d.txt' % thres
 
 batch = 100000
@@ -101,7 +100,7 @@ def build_field_feature(path, mode):
             d_field_fea_cnt[idx_field][fea] += 1
     for index_field in lst_index_cat:
         for fea in d_field_fea_cnt[index_field].keys():
-            if d_field_fea_cnt[index_field][fea] > thres:
+            if d_field_fea_cnt[index_field][fea] >= thres:
                 d_field_fea_cnt_above_threshold.setdefault(index_field, {})
                 d_field_fea_cnt_above_threshold[index_field][fea] = d_field_fea_cnt[index_field][fea]
     for index_field in lst_index_cat:
@@ -123,7 +122,7 @@ def create_fea_index(path, model):
         file.write("%d:%s\t%d\n" % (idx_field, 'zero_fea_for_field_' + str(idx_field), index))
         index += 1
         for fea in d_field_fea[idx_field]:
-            if d_field_fea_cnt[idx_field][fea] > thres:
+            if d_field_fea_cnt[idx_field][fea] >= thres:
                 d_fea_index[idx_field][fea] = index
                 file.write("%d:%s\t%d\n" % (idx_field, fea, index))
                 index += 1
@@ -152,7 +151,7 @@ def create_ffm_fea_index(path, d=14, k=2):
         cnt_fea_after_hash += 1
         index += 1
         for fea in d_field_fea[idx_field]:
-            if d_field_fea_cnt[idx_field][fea] > thres:
+            if d_field_fea_cnt[idx_field][fea] >= thres:
                 cnt_fea_before_hash += 1
                 cnt_qualify_for_this_field += 1
         print "idx_field: %d, cnt_qualify_for_this_field: %d" % (idx_field, cnt_qualify_for_this_field)
@@ -160,7 +159,7 @@ def create_ffm_fea_index(path, d=14, k=2):
             start = index
             end = index + cnt_qualify_for_this_field / d
             for fea in d_field_fea[idx_field]:
-                if d_field_fea_cnt[idx_field][fea] > thres:
+                if d_field_fea_cnt[idx_field][fea] >= thres:
                     idx_hash = mmh3.hash(fea) % (end - start) + start
                     d_fea_index[idx_field][fea] = idx_hash
                     file.write("%d:%s\t%d\n" % (idx_field, fea, idx_hash))
@@ -169,7 +168,7 @@ def create_ffm_fea_index(path, d=14, k=2):
             print "field %d qualifies, # parameters before hash: %d, # parameters after hash: %d" % (idx_field, cnt_qualify_for_this_field, end - start)
         else:
             for fea in d_field_fea[idx_field]:
-                if d_field_fea_cnt[idx_field][fea] > thres:
+                if d_field_fea_cnt[idx_field][fea] >= thres:
                     cnt_fea_after_hash += 1
                     d_fea_index[idx_field][fea] = index
                     file.write("%d:%s\t%d\n" % (idx_field, fea, index))
@@ -242,6 +241,15 @@ def rebalance(path, d={}):
             file.write(line)
     file.close()
 
+# Remove conversion type after add them. We need to add them first and then remove them as a feature, to keep the data set the same.
+def remove_conf_type(path, index=17):
+    file = open(path + '.remove_conv_type', 'w')
+    for line in open(path):
+        lst = line.strip('\n').split('\t')
+        lst_new = lst[:index] + lst[index+1:]
+        file.write('\t'.join(lst_new) + '\n')
+    file.close()
+
 # To generate several data sets for FFM with different hashing space.
 '''
 d = num_fields - 1
@@ -283,4 +291,9 @@ create_yx(path_test, 'train', model)
 #path_train_yx = path_train + '.thres5.yx'
 #rebalance(path_train_yx, d={54337: 20})
 
+'''
+remove_conf_type(path_train)
+remove_conf_type(path_validation)
+remove_conf_type(path_test)
+'''
 
