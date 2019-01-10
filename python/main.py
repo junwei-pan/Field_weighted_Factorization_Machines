@@ -292,8 +292,10 @@ def mapConf2Model(name):
     if model_name == 'ffm':
         return FFM(**conf)
     elif model_name == 'fwfm':
+        conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
         return FwFM(**conf)
     elif model_name == 'fwfm3':
+        conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
         return FwFM3(**conf)
     elif model_name == 'fm':
         return FM(**conf)
@@ -304,8 +306,10 @@ def mapConf2Model(name):
     elif model_name == 'MTLfwfm':
         conf['index_lines'] = utils.index_lines
         conf['num_lines'] = FIELD_SIZES[utils.index_lines]
+        conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
         return MultiTask_FwFM(**conf)
     elif model_name == 'DINN':
+        conf['layer_sizes'] = [FIELD_SIZES, 10, 1]
         return DINN(**conf)
 
 #for name in ['ffm_l2_v_1e-7_lr_1e-1', 'ffm_l2_v_1e-7_lr_1e-2', 'ffm_l2_v_1e-7_lr_1e-3', 'ffm_l2_v_1e-7_lr_1e-4', 'ffm_l2_v_1e-7_lr_1e-5', 'ffm_l2_v_1e-7_lr_1e-6']:
@@ -329,7 +333,8 @@ def mapConf2Model(name):
 #for name in ['DINN_lr_1e-4_l2_v_1e-5']:
 #for name in ['MTLfwfm_r_factorized_lr_5e-5', 'MTLfwfm_r_factorized_lr_1e-5', 'MTLfwfm_r_factorized_lr_5e-5_l2_r_1e-5']:
 #for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5']:
-for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
+#for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
+for name in ['MTLfwfm_lr_5e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5_l2_r_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5_l2_r_1e-6']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
