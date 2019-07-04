@@ -78,7 +78,7 @@ round_no_improve = 5
 
 field_offsets = utils.FIELD_OFFSETS
 
-def train(model, name, in_memory = True, flag_MTL = True):
+def train(model, name, in_memory = True, flag_MTL = False):
     #builder = tf.saved_model.builder.SavedModelBuilder('model')
     global batch_size, time_run, time_read, time_process
     history_score = []
@@ -333,11 +333,11 @@ def mapConf2Model(name):
 #for name in ['DINN_lr_1e-4_l2_v_1e-5']:
 #for name in ['MTLfwfm_r_factorized_lr_5e-5', 'MTLfwfm_r_factorized_lr_1e-5', 'MTLfwfm_r_factorized_lr_5e-5_l2_r_1e-5']:
 #for name in ['MTLfwfm_lr_5e-5_l2_v_1e-5']:
-#for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
-for name in ['MTLfwfm_lr_5e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5_l2_r_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5_l2_r_1e-6']:
+#for name in ['MTLfwfm_lr_5e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5_l2_r_1e-5', 'MTLfwfm_lr_5e-5_l2_v_1e-5_l2_r_1e-6']:
+for name in ['fwfm_l2_v_1e-5_lr_5e-5']:
     print 'name with none activation', name
     sys.stdout.flush()
     model = mapConf2Model(name)
-    train(model, name + '_yahoo_dataset2.2', in_memory=True, flag_MTL=True)
+    train(model, name + '_yahoo_dataset2.2', in_memory=True, flag_MTL=False)
 
     #train(model, name + '_criteo')
